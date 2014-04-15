@@ -30,18 +30,21 @@ int main(){
 	/* Find suitable network hardware to monitor: */
 	if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
 		fprintf(stderr, "[FAIL] pcap_lookupdev returned: \"%s\"\n", errbuf);
+        free(sniffArgs);
 		return 1;
 	} else printf("[INFO] Found Hardware: %s\n", device);
 
     /* Obtain a descriptor to monitor the hardware: */
     if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
         fprintf(stderr, "[FAIL] pcap_open_live returned: \"%s\"\n", errbuf);
+        free(sniffArgs);
         return 1;
     } else printf("[INFO] Obtained Socket Descriptor.\n");
 
 	/* Determine the data link type of the descriptor we obtained: */
     if ((datalinkType = pcap_datalink(packetDescriptor)) < 0 ){
         fprintf(stderr, "[FAIL] pcap_datalink returned: \"%s\"\n", pcap_geterr(packetDescriptor));
+        free(sniffArgs);
         return 2;
     } else printf("[INFO] Obtained Data Link Type: %d\n", datalinkType);
  
@@ -70,29 +73,34 @@ int main(){
 	 	
 	    default:
 	    	printf("[ERROR]: Unsupported datalink type: %d\n", datalinkType);
+            free(sniffArgs);
 	        return 2;
     }
 
     // Get network device source IP address and netmask.
     if (pcap_lookupnet(device, &srcIP, &netmask, errbuf) < 0){
         printf("[FAIL] pcap_lookupnet returned: \"%s\"\n", errbuf);
+        free(sniffArgs);
         return 1;
     } else printf("[INFO] Source IP/Netmask: 0x%x/0x%x\n", srcIP, netmask);
 
     // Convert the packet filter epxression into a packet  filter binary.
     if (pcap_compile(packetDescriptor, &packetFilter, packetFilterString, 0, netmask)){
         printf("[FAIL] pcap_compile returned: \"%s\"\n", pcap_geterr(packetDescriptor));
+        free(sniffArgs);
         return 1;
     } 
 
     // Assign the packet filter to the given libpcap socket.
     if (pcap_setfilter(packetDescriptor, &packetFilter) < 0) {
         printf("[FAIL] pcap_setfilter returned: \"%s\"\n", pcap_geterr(packetDescriptor));
+        free(sniffArgs);
         return 1;
     } else printf("[INFO] Packet Filter: %s\n", packetFilterString);
 
     /* Start the loop: */
 	pcap_loop(packetDescriptor, -1, processPacket, (u_char *)sniffArgs);
+    free(sniffArgs);
 	return 0;
 }
 
