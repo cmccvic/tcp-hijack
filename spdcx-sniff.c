@@ -1,11 +1,19 @@
 #include "spdcx-sniff.h"
 
+//#define SAMPLE_FILTER "tcp and port 80"
+//#define SAMPLE_FILTER "udp and port 53"
+#define SAMPLE_FILTER ""
+
 int main(){
-    char            errbuf[PCAP_ERRBUF_SIZE];
-	char            *device;
-    int             datalinkType;
-    int             maxBytesToCapture = 65535;
-	pcap_t          *packetDescriptor;
+    char                errbuf[PCAP_ERRBUF_SIZE];
+    char                packetFilterString[128];
+	char                *device;
+    int                 datalinkType;
+    int                 maxBytesToCapture = 65535;
+	pcap_t              *packetDescriptor;
+    struct bpf_program  packetFilter;
+    uint32_t            srcIP;
+    uint32_t            netmask;
 
 	spdcxSniffArgs *sniffArgs;
 	if( !(sniffArgs = malloc(sizeof(spdcxSniffArgs))) ){
@@ -13,9 +21,11 @@ int main(){
 		return 1;
 	}
 
-    /* Zero out data we will eventually populate: */
+    /* Initialize data: */
 	memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
-	memset(errbuf, 0, PCAP_ERRBUF_SIZE);
+    memset(errbuf, 0, PCAP_ERRBUF_SIZE);
+    memset(packetFilterString, 0, 128);
+    strncpy(packetFilterString, SAMPLE_FILTER, 127);
 
 	/* Find suitable network hardware to monitor: */
 	if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
@@ -23,11 +33,11 @@ int main(){
 		return 1;
 	} else printf("[INFO] Found Hardware: %s\n", device);
 
-	/* Obtain a descriptor to monitor the hardware: */
-	if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
-		fprintf(stderr, "[FAIL] pcap_open_live returned: \"%s\"\n", errbuf);
-		return 1;
-	} else printf("[INFO] Obtained Socket Descriptor: %d\n", packetDescriptor);
+    /* Obtain a descriptor to monitor the hardware: */
+    if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
+        fprintf(stderr, "[FAIL] pcap_open_live returned: \"%s\"\n", errbuf);
+        return 1;
+    } else printf("[INFO] Obtained Socket Descriptor.\n");
 
 	/* Determine the data link type of the descriptor we obtained: */
     if ((datalinkType = pcap_datalink(packetDescriptor)) < 0 ){
@@ -63,6 +73,24 @@ int main(){
 	        return 2;
     }
 
+    // Get network device source IP address and netmask.
+    if (pcap_lookupnet(device, &srcIP, &netmask, errbuf) < 0){
+        printf("[FAIL] pcap_lookupnet returned: \"%s\"\n", errbuf);
+        return 1;
+    } else printf("[INFO] Source IP/Netmask: 0x%x/0x%x\n", srcIP, netmask);
+
+    // Convert the packet filter epxression into a packet  filter binary.
+    if (pcap_compile(packetDescriptor, &packetFilter, packetFilterString, 0, netmask)){
+        printf("[FAIL] pcap_compile returned: \"%s\"\n", pcap_geterr(packetDescriptor));
+        return 1;
+    } 
+
+    // Assign the packet filter to the given libpcap socket.
+    if (pcap_setfilter(packetDescriptor, &packetFilter) < 0) {
+        printf("[FAIL] pcap_setfilter returned: \"%s\"\n", pcap_geterr(packetDescriptor));
+        return 1;
+    } else printf("[INFO] Packet Filter: %s\n", packetFilterString);
+
     /* Start the loop: */
 	pcap_loop(packetDescriptor, -1, processPacket, (u_char *)sniffArgs);
 	return 0;
@@ -70,9 +98,9 @@ int main(){
 
 
 void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_char *packet){
-    char            ipHeaderInfo[256];
     char            dstIP[256];
     char            srcIP[256];
+    int             dataLength;
     int             *packetCounter;
     spdcxSniffArgs  *sniffArgs;
     struct ip       *ipHeader;
@@ -91,45 +119,86 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     /* Navigate past the Data Link layer to the Network layer: */
     packet += sniffArgs->dataLinkOffset;
     ipHeader = (struct ip*)packet;
+    dataLength = ntohs(ipHeader->ip_len) - (4 * ipHeader->ip_hl);
     strcpy(srcIP, inet_ntoa(ipHeader->ip_src));
     strcpy(dstIP, inet_ntoa(ipHeader->ip_dst));
-    sprintf(ipHeaderInfo, "{\"ID\":%d, \"TOS\":0x%x, \"TTL\":%d, \"IpLen\":%d, \"DgLen\":%d}",
-            ntohs(ipHeader->ip_id), ipHeader->ip_tos, ipHeader->ip_ttl, 4*ipHeader->ip_hl, ntohs(ipHeader->ip_len));
-    printf("NETWORK: %s\n", ipHeaderInfo);
+
+    printf("NETWORK:\n\t{");
+    printf("\"ID\":%d, ", ntohs(ipHeader->ip_id));
+    printf("\"Service Type\":0x%x, ", ipHeader->ip_tos);
+    printf("\"TTL\":%d, ", ipHeader->ip_ttl);
+    printf("\"Header Length\":%d, ", 4 * ipHeader->ip_hl);
+    printf("\"Total Length\":%d", ntohs(ipHeader->ip_len));
+    printf("}\n");
 
     /* Navigate past the Network layer to the Transport layer: */
-    printf("TRANSPORT: ");
-    packet += 4*ipHeader->ip_hl;
+    packet += 4 * ipHeader->ip_hl;
+    printf("TRANSPORT:\n\t{");
     switch (ipHeader->ip_p) {
         case IPPROTO_TCP:
             tcpHeader = (struct tcphdr*)packet;
-            printf("{\"Protocol\":\"TCP\", \"Src\":\"%s:%d\", \"Dst\":\"%s:%d\",\n", 
-                srcIP, ntohs(tcpHeader->source), dstIP, ntohs(tcpHeader->dest));
-            printf("\t\"Flags\":\"%c%c%c%c%c%c\", \"Seq\":0x%x, \"Ack\":0x%x, \"Win\":0x%x, \"TcpLen\":%d}\n",
-                   (tcpHeader->urg ? 'U' : '*'), (tcpHeader->ack ? 'A' : '*'), (tcpHeader->psh ? 'P' : '*'), 
-                   (tcpHeader->rst ? 'R' : '*'), (tcpHeader->syn ? 'S' : '*'), (tcpHeader->fin ? 'F' : '*'),
-                   ntohl(tcpHeader->seq), ntohl(tcpHeader->ack_seq), ntohs(tcpHeader->window), 4*tcpHeader->doff);
+            dataLength = dataLength - TCP_HEADER_SIZE;
+            packet += TCP_HEADER_SIZE;
+            printf("\"Protocol\":\"TCP\", ");
+            printf("\"Source\":\"%s:%d\", ", srcIP, ntohs(tcpHeader->source));
+            printf("\"Destination\":\"%s:%d\", ", dstIP, ntohs(tcpHeader->dest));
+            printf("\"Flags\":\"");
+            printf("%s", (tcpHeader->syn ? "SYN|"   : ""));
+            printf("%s", (tcpHeader->ack ? "ACK|"   : ""));
+            printf("%s", (tcpHeader->fin ? "FIN|"   : ""));
+            printf("%s", (tcpHeader->psh ? "PUSH|"  : ""));
+            printf("%s", (tcpHeader->urg ? "URGENT|": ""));
+            printf("%s", (tcpHeader->rst ? "RESET|" : ""));
+            printf("\b\", ");
+            printf("\"Sequence #\":0x%x, ", ntohl(tcpHeader->seq));
+            printf("\"ACK\":0x%x, ", ntohl(tcpHeader->ack_seq));
+            printf("\"Window\":0x%x, ", ntohs(tcpHeader->window));
+            printf("\"Data Offset\":%d", 4 * tcpHeader->doff);
+            printf("}\n");
             break;
      
         case IPPROTO_UDP:
             udpHeader = (struct udphdr*)packet;
-            printf("{\"Protocol\":\"UDP\", \"Src\":\"%s:%d\", \"Dst\":\"%s:%d\"}\n", 
-                srcIP, ntohs(udpHeader->source), dstIP, ntohs(udpHeader->dest));
+            dataLength = dataLength - UDP_HEADER_SIZE;
+            packet += UDP_HEADER_SIZE;
+            printf("\"Protocol\":\"UDP\", ");
+            printf("\"Source\":\"%s:%d\", ", srcIP, ntohs(udpHeader->source));
+            printf("\"Destination\":\"%s:%d\", ", dstIP, ntohs(udpHeader->dest));
+            printf("\"UDP Length\":\"%d\"", ntohs(udpHeader->len));
+            printf("}\n");
             break;
      
         case IPPROTO_ICMP:
             icmpHeader = (struct icmphdr*)packet;
-            printf("{\"Protocol\":\"ICMP\", \"Src\":\"%s\", \"Dst\":\"%s\",\n", srcIP, dstIP);
             memcpy(&id, (u_char*)icmpHeader+4, 2);
             memcpy(&seq, (u_char*)icmpHeader+6, 2);
-            printf("\t\"Type:\"%d, \"Code\":%d, \"ID\":%d, \"Seq\":%d}\n", 
-                icmpHeader->type, icmpHeader->code, ntohs(id), ntohs(seq));
+            printf("\"Protocol\":\"ICMP\", ");
+            printf("\"Source\":\"%s\", ", srcIP);
+            printf("\"Destination\":\"%s\", ", dstIP);
+            printf("\"Type\":\"%d\", ", icmpHeader->type);
+            printf("\"Code\":\"%d\", ", icmpHeader->code);
+            printf("\"ID\":\"%d\", ", ntohs(id));
+            printf("\"Sequence\":\"%d\", ", ntohs(seq));
+            printf("}\n");
             break;
 
         default:
-            printf("Unsupported Protocol\n");
+            printf("\"Protocol\":0x%x", ipHeader->ip_p);
             break;
     }
-    printf("========================================================\n\n");
-}
 
+    /* Navigate past the Transport layer to the payload: */
+    if(dataLength > 0){
+        printf("PAYLOAD (%d bytes):\n\t", dataLength);
+        int k=0; 
+        while( k < dataLength ){
+            if( k%8 ==0 && k>0 )
+                printf("    ");
+            if( k%16 ==0 && k>0 )        
+                printf("\n\t");
+            printf("%02x ", packet[k]);
+            k++;
+        }        
+    }
+    printf("\n========================================================\n\n");
+}
