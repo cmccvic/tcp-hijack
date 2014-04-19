@@ -4,7 +4,7 @@
 //#define SAMPLE_FILTER "udp and port 53"
 #define SAMPLE_FILTER ""
 
-int main(){
+int main(int argc, char const *argv[]){
     char                errbuf[PCAP_ERRBUF_SIZE];
     char                packetFilterString[128];
 	char                *device;
@@ -28,11 +28,15 @@ int main(){
     strncpy(packetFilterString, SAMPLE_FILTER, 127);
 
 	/* Find suitable network hardware to monitor: */
-	if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
-		fprintf(stderr, "[FAIL] pcap_lookupdev returned: \"%s\"\n", errbuf);
-        free(sniffArgs);
-		return 1;
-	} else printf("[INFO] Found Hardware: %s\n", device);
+	if(argc < 2) {	
+		if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
+			fprintf(stderr, "[FAIL] pcap_lookupdev returned: \"%s\"\n", errbuf);
+	        free(sniffArgs);
+			return 1;
+		} else printf("[INFO] Found Hardware: %s\n", device);
+	} else {
+		device = (char*) argv[1];
+	}
 
     /* Obtain a descriptor to monitor the hardware: */
     if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
