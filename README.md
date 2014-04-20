@@ -1,6 +1,6 @@
 # CSE408
 
-## TCP Highjacking
+## TCP Hijacking
 
 ### TODO/Progress:
 1. Learn how to receive packets from a single source. (not promiscuous mode)
@@ -11,7 +11,7 @@
 
 1. Identify server to tcp hijack
 2. Scan network for connecting clients
-3. When client is found, create fake packet and attempt to highjack the session 
+3. When client is found, create fake packet and attempt to hijack the session 
 
 >If we want to perform a tcp/ip 3-way handshake, we need to set up an IP tables rule to block the rst packet sent by the OS. See the ISSUES section below for the ip-table rule.
 
@@ -25,4 +25,4 @@
 
 ### Resources
 
-1. [TCP Highjacking](http://www.techrepublic.com/article/tcp-hijacking/)
+1. [TCP Hijacking](http://www.techrepublic.com/article/tcp-hijacking/)
