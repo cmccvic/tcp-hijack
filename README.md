@@ -2,6 +2,11 @@
 
 ## TCP Highjacking
 
+### TODO/Progress:
+1. Learn how to receive packets from a single source. (not promiscuous mode)
+2. Create client identification.
+3. Create actual attack :)
+
 ### Steps
 
 1. Identify server to tcp hijack
