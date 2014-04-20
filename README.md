@@ -8,8 +8,7 @@
 2. Scan network for connecting clients
 3. When client is found, create fake packet and attempt to highjack the session 
 
-During tcp/ip handshake need to set up an IP tables rule
-to block the rst
+>If we want to perform a tcp/ip 3-way handshake, we need to set up an IP tables rule to block the rst packet sent by the OS. See the ISSUES section below for the ip-table rule.
 
 ### Setup
 
