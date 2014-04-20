@@ -1,17 +1,18 @@
 CC = gcc
-CFLAGS =- Wall -Werror
+CFLAGS = -Wall -Werror
 LIBS = -lpcap
+BIN = tcphijack
 
-all: hijack
+all: tcphijack
 
-hijack:	tcphighjack.o tcphighjack.h
-	$(CC) $(CFLAGS) -o highjack $*.o $(LIBS)
+tcphijack:	tcphijack.o
+	$(CC) $(CFLAGS) -o $(BIN) *.o
 
-hijack.o: tcphighjack.c tcphighjack.h
-	$(CC) $(CFLAGS) -c $*.c
+tcphijack.o: tcphijack.c
+	$(CC) $(CFLAGS) -c $*.c $(LIBS)
 
-run:
-	sudo ./highjack
+run: tcphijack
+	sudo ./$(BIN)
 
 clean:
-	rm -f *.o highjack
+	rm -f *.o $(BIN)
