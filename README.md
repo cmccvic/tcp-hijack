@@ -4,7 +4,7 @@
 
 ### Steps
 
-1. Identify server to session hijack
+1. Identify server to tcp hijack
 2. Scan network for connecting clients
 3. When client is found, create fake packet and attempt to highjack the session 
 
