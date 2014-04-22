@@ -1,7 +1,4 @@
 #include "tcphijack.h"
-//Data to be sent (appended at the end of the TCP header)
-//#define DATA "datastring"
-#define DATA ""
 
 //Debug function: dump 'index' bytes beginning at 'buffer'
 void hexdump(unsigned char *buffer, unsigned long index) {
