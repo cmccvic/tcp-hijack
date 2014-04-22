@@ -30,15 +30,6 @@ void gen_packet(  char *srcIP,
                   int packet_size);
 
 
-//Pseudo header needed for calculating the TCP header checksum
-struct pseudoTCPPacket {
-  uint32_t srcAddr;
-  uint32_t dstAddr;
-  uint8_t zero;
-  uint8_t protocol;
-  uint16_t TCP_len;
-};
-
 int main(int argc, char **argv) {
   int sock, one = 1;
 

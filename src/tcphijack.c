@@ -44,16 +44,6 @@ unsigned short csum(unsigned short *ptr,int nbytes) {
   return(answer);
 }
 
-
-//Pseudo header needed for calculating the TCP header checksum
-struct pseudoTCPPacket {
-  uint32_t srcAddr;
-  uint32_t dstAddr;
-  uint8_t zero;
-  uint8_t protocol;
-  uint16_t TCP_len;
-};
-
 int main(int argc, char **argv) {
   int sock, bytes, one = 1;
   struct iphdr *ipHdr;

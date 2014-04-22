@@ -21,4 +21,13 @@
 //#include <netinet/tcp.h>
 //#include <netinet/ip.h>
 
+//Pseudo header needed for calculating the TCP header checksum
+struct pseudoTCPPacket {
+  uint32_t srcAddr;
+  uint32_t dstAddr;
+  uint8_t zero;
+  uint8_t protocol;
+  uint16_t TCP_len;
+};
+
 #endif
