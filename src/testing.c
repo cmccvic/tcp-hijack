@@ -136,14 +136,14 @@ void gen_packet(  char *srcIP,
   memset(packet, 0, packet_size);
   ipHdr = (struct iphdr *) packet;
   tcpHdr = (struct tcphdr *) (packet + sizeof(struct iphdr));
-  data = (char *) (packet + sizeof(struct iphdr) + sizeof(struct tcphdr));
-  //strcpy(data, DATA);
+  char *packet_data = (char *) (packet + sizeof(struct iphdr) + sizeof(struct tcphdr));
+  strcpy(packet_data, data);
 
   //Populate ipHdr
   ipHdr->ihl = 5; //5 x 32-bit words in the header
   ipHdr->version = 4; // ipv4
   ipHdr->tos = 0;// //tos = [0:5] DSCP + [5:7] Not used, low delay
-  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data); //total lenght of packet. len(data) = 0
+  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(packet_data); //total lenght of packet. len(data) = 0
   ipHdr->id = htons(54321); // 0x00; //16 bit id
   ipHdr->frag_off = 0x00; //16 bit field = [0:2] flags + [3:15] offset = 0x0
   ipHdr->ttl = 0xFF; //16 bit time to live (or maximal number of hops)
@@ -179,18 +179,18 @@ void gen_packet(  char *srcIP,
   pTCPPacket.dstAddr = inet_addr(dstIP); //32 bit format of source address
   pTCPPacket.zero = 0; //8 bit always zero
   pTCPPacket.protocol = IPPROTO_TCP; //8 bit TCP protocol
-  pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + strlen(data)); // 16 bit length of TCP header
+  pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + strlen(packet_data)); // 16 bit length of TCP header
 
   //Populate the pseudo packet
-  pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data)));
-  memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data));
+  pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(packet_data)));
+  memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(packet_data));
 
   //Copy pseudo header
   memcpy(pseudo_packet, (char *) &pTCPPacket, sizeof(struct pseudoTCPPacket));
-  memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcpHdr, sizeof(struct tcphdr) + strlen(data));
+  memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcpHdr, sizeof(struct tcphdr) + strlen(packet_data));
 
   tcpHdr->check = (csum((unsigned short *) pseudo_packet, (int) (sizeof(struct pseudoTCPPacket) + 
-          sizeof(struct tcphdr) +  strlen(data))));
+          sizeof(struct tcphdr) +  strlen(packet_data))));
 
   free(pseudo_packet);
 }
