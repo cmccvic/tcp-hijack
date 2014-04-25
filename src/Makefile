@@ -6,7 +6,7 @@ BIN = tcphijack
 
 .PHONY: clean all run
 
-all: tcphijack
+all: tcphijack sniffer
 
 tcphijack:	tcphijack.o
 	$(CC) $(CFLAGS) -o $(BIN) *.o
@@ -27,4 +27,4 @@ run: tcphijack
 	sudo ./$(BIN)
 
 clean:
-	rm -f *.o $(BIN)
+	rm -f *.o $(BIN) sniffer
