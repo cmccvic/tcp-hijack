@@ -11,8 +11,17 @@ all: tcphijack
 tcphijack:	tcphijack.o
 	$(CC) $(CFLAGS) -o $(BIN) *.o
 
+sniffer: sniffer.o
+	$(CC) $(CFLAGS) -o sniffer
+
 tcphijack.o: tcphijack.c
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
+
+sniffer.o: sniffer.c
+	$(CC) $(CFLAGS) -c $*.c $(LIBS)
+
+sniff: sniffer
+	sudo ./sniffer
 
 run: tcphijack
 	sudo ./$(BIN)
