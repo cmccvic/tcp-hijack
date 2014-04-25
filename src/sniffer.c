@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <pcap.h>  /* GIMME a libpcap plz! */
+#include <pcap/pcap.h>
+//#include <pcap.h>  /* GIMME a libpcap plz! */
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
