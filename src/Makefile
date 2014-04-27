@@ -14,7 +14,7 @@ tcphijack:	tcphijack.o
 sniffer: sniffer.o
 	$(CC) $(CFLAGS) -o sniffer sniffer.o $(LIBS)
 
-tcphijack.o: tcphijack.c
+tcphijack.o: tcphijack.c ../include/tcphijack.h
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
 
 sniffer.o: sniffer.c
