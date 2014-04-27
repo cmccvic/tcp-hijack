@@ -9,10 +9,10 @@ BIN = tcphijack
 all: tcphijack sniffer
 
 tcphijack:	tcphijack.o
-	$(CC) $(CFLAGS) -o $(BIN) *.o
+	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o
 
 sniffer: sniffer.o
-	$(CC) $(CFLAGS) $(LIBS)-o sniffer sniffer.o
+	$(CC) $(CFLAGS) $(LIBS) -o sniffer sniffer.o
 
 tcphijack.o: tcphijack.c
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
