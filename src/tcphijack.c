@@ -25,7 +25,7 @@ void gen_packet(  char *srcIP,
                   int ack,
                   int seq,
                   int ack_seq,
-                  char *data,
+                  char data,
                   char *packet,
                   int packet_size);
 
@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
   int sock, one = 1;
 
   //Setup
-  char *srcIP = "192.168.1.101";
-  char *dstIP = "192.168.1.122";
+  char *srcIP = "192.168.1.112";
+  char *dstIP = "192.168.1.113";
   int dstPort = 23;
-  int srcPort = 57765;
-  int packet_size = 512;
+  int srcPort = 57781;
+  int packet_size = 513;
 
   //Ethernet header + IP header + TCP header + data
   char packet[packet_size];
@@ -74,11 +74,11 @@ int main(int argc, char **argv) {
                 dstIP,
                 dstPort,
                 srcPort,
-                0, //syn
-                2410595479, //ack
-                2426814758, //seq
+                1, //syn
+                //3958977764, //ack
+                //3927061503, //seq
                 0, //syn_ack
-                "", //data
+                '\0', //data
                 packet,
                 packet_size);
 
@@ -112,7 +112,7 @@ void gen_packet(  char *srcIP,
                   int ack,
                   int seq,
                   int ack_seq,
-                  char *data,
+                  char data,
                   char *packet,
                   int packet_size) {
 
@@ -125,13 +125,14 @@ void gen_packet(  char *srcIP,
   ipHdr = (struct iphdr *) packet;
   tcpHdr = (struct tcphdr *) (packet + sizeof(struct iphdr));
   char *packet_data = (char *) (packet + sizeof(struct iphdr) + sizeof(struct tcphdr));
-  strcpy(packet_data, data);
+  *packet_data = data;
+  //strcpy(packet_data, data);
 
   //Populate ipHdr
   ipHdr->ihl = 5; //5 x 32-bit words in the header
   ipHdr->version = 4; // ipv4
   ipHdr->tos = 0;// //tos = [0:5] DSCP + [5:7] Not used, low delay
-  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(packet_data); //total lenght of packet. len(data) = 0
+  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + 1;//strlen(packet_data); //total lenght of packet. len(data) = 0
   ipHdr->id = htons(54321); // 0x00; //16 bit id
   ipHdr->frag_off = 0x00; //16 bit field = [0:2] flags + [3:15] offset = 0x0
   ipHdr->ttl = 0xFF; //16 bit time to live (or maximal number of hops)
