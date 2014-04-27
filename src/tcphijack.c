@@ -19,15 +19,15 @@ void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
 
 void gen_packet(  char *srcIP,
                   char *dstIP,
-                  int dstPort,
-                  int srcPort,
-                  int syn,
-                  int ack,
-                  int seq,
-                  int ack_seq,
+                  u_int16_t dstPort,
+                  u_int16_t srcPort,
+                  u_int32_t syn,
+                  u_int16_t ack,
+                  u_int32_t seq,
+                  u_int32_t ack_seq,
                   char data,
                   char *packet,
-                  int packet_size);
+                  uint32_t packet_size);
 
 
 int main(int argc, char **argv) {
@@ -37,8 +37,8 @@ int main(int argc, char **argv) {
   char *srcIP = "192.168.1.112";
   char *dstIP = "192.168.1.113";
   int dstPort = 23;
-  int srcPort = 57781;
-  int packet_size = 513;
+  int srcPort = 59590;
+  int packet_size = 44;
 
   //Ethernet header + IP header + TCP header + data
   char packet[packet_size];
@@ -74,11 +74,11 @@ int main(int argc, char **argv) {
                 dstIP,
                 dstPort,
                 srcPort,
-                1, //syn
-                //3958977764, //ack
-                //3927061503, //seq
-                0, //syn_ack
-                '\0', //data
+                0, //syn
+                1, //ack
+                4012204397, //seq
+                2948134095, //syn_ack
+                'z', //data
                 packet,
                 packet_size);
 
@@ -99,22 +99,22 @@ void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     perror("Error on sendto()");
   }
   else {
-    printf("Success! Sent %d bytes.\n", bytes);
+    printf("\nSuccess! Sent %d bytes.\n", bytes);
   }
 }
 
 
 void gen_packet(  char *srcIP,
                   char *dstIP,
-                  int dstPort,
-                  int srcPort,
-                  int syn,
-                  int ack,
-                  int seq,
-                  int ack_seq,
+                  u_int16_t dstPort,
+                  u_int16_t srcPort,
+                  u_int32_t syn,
+                  u_int16_t ack,
+                  u_int32_t seq,
+                  u_int32_t ack_seq,
                   char data,
                   char *packet,
-                  int packet_size) {
+                  uint32_t packet_size) {
 
   struct iphdr *ipHdr;
   struct tcphdr *tcpHdr;
@@ -147,8 +147,8 @@ void gen_packet(  char *srcIP,
   //Populate tcpHdr
   tcpHdr->source = htons(srcPort); //16 bit in nbp format of source port
   tcpHdr->dest = htons(dstPort); //16 bit in nbp format of destination port
-  tcpHdr->seq = seq; //32 bit sequence number, initially set to zero
-  tcpHdr->ack_seq = ack_seq; //32 bit ack sequence number, depends whether ACK is set or not
+  tcpHdr->seq = htonl(seq);//seq; //32 bit sequence number, initially set to zero
+  tcpHdr->ack_seq = htonl(ack_seq);//ack_seq; //32 bit ack sequence number, depends whether ACK is set or not
   tcpHdr->doff = 5; //4 bits: 5 x 32-bit words on tcp header
   tcpHdr->res1 = 0; //4 bits: Not used
   tcpHdr->cwr = 0; //Congestion control mechanism
@@ -162,6 +162,10 @@ void gen_packet(  char *srcIP,
   tcpHdr->window = htons(43690);//0xFFFF; //16 bit max number of databytes 
   tcpHdr->check = 0; //16 bit check sum. Can't calculate at this point
   tcpHdr->urg_ptr = 0; //16 bit indicate the urgent data. Only if URG flag is set
+
+  printf("seq: %u\n", tcpHdr->seq);
+  printf("ack_seq: %u\n", tcpHdr->ack_seq);
+
 
   //Now we can calculate the checksum for the TCP header
   pTCPPacket.srcAddr = inet_addr(srcIP); //32 bit format of source address
@@ -182,6 +186,32 @@ void gen_packet(  char *srcIP,
           sizeof(struct tcphdr) +  strlen(packet_data))));
 
   free(pseudo_packet);
+
+  int i;
+  printf("\n");
+  for (i = 0; i < packet_size; ++i) {
+
+    if((i % 4) == 0) {
+      printf("\n");
+    }
+
+    printf("%d", (0x01 & *(packet + i) >> 7));
+    printf("%d", (0x01 & *(packet + i) >> 6));
+    printf("%d", (0x01 & *(packet + i) >> 5));
+    printf("%d", (0x01 & *(packet + i) >> 4));
+    printf(" ");
+    printf("%d", (0x01 & *(packet + i) >> 3));
+    printf("%d", (0x01 & *(packet + i) >> 2));
+    printf("%d", (0x01 & *(packet + i) >> 1));
+    printf("%d", (0x01 & *(packet + i) >> 0));
+    printf(" ");
+
+    if(i == 19) {
+      printf("\n------------------TCP------------------");
+    } else if(i == (20+19)) {
+      printf("\n------------------DATA-----------------");
+    }
+  }
 }
 
 
