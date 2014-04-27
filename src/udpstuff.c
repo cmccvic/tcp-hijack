@@ -109,7 +109,7 @@ int main (void) {
     
     //UDP header
     udph->source = htons (srcprt);
-    udph->dest = htons (dest);
+    udph->dest = htons (destprt);
     udph->len = htons(8 + strlen(data)); //tcp header size
     udph->check = 0; //leave checksum 0 now, filled later by pseudo header
     
