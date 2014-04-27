@@ -27,4 +27,4 @@ run: tcphijack
 	sudo ./$(BIN)
 
 clean:
-	rm -f *.o $(BIN) sniffer
+	rm -f *.o *.out $(BIN) sniffer
