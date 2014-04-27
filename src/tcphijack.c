@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   char *dstIP = "192.168.1.122";
   int dstPort = 23;
   int srcPort = 57765;
-  int packet_size = 512+1;
+  int packet_size = 512;
 
   //Ethernet header + IP header + TCP header + data
   char packet[packet_size];
@@ -75,10 +75,10 @@ int main(int argc, char **argv) {
                 dstPort,
                 srcPort,
                 0, //syn
-                1766801933, //ack
-                1159186838 + packet_size, //seq
+                2410595479, //ack
+                2426814758, //seq
                 0, //syn_ack
-                "e", //data
+                "", //data
                 packet,
                 packet_size);
 
