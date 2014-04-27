@@ -12,7 +12,7 @@ tcphijack:	tcphijack.o
 	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o
 
 sniffer: sniffer.o
-	$(CC) $(CFLAGS) $(LIBS) -o sniffer sniffer.o
+	$(CC) $(CFLAGS) -o sniffer sniffer.o $(LIBS)
 
 tcphijack.o: tcphijack.c
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
