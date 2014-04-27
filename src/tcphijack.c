@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
   int sock, one = 1;
 
   //Setup
-  char *srcIP = "127.0.0.1";
-  char *dstIP = "127.0.0.1";
-  int dstPort = 1337;
-  int srcPort = 1338;
-  int packet_size = 512;
+  char *srcIP = "192.168.1.101";
+  char *dstIP = "192.168.1.122";
+  int dstPort = 23;
+  int srcPort = 57765;
+  int packet_size = 512+1;
 
   //Ethernet header + IP header + TCP header + data
   char packet[packet_size];
@@ -74,11 +74,11 @@ int main(int argc, char **argv) {
                 dstIP,
                 dstPort,
                 srcPort,
-                1, //syn
-                0, //ack
-                0, //seq
+                0, //syn
+                1766801933, //ack
+                1159186838 + packet_size, //seq
                 0, //syn_ack
-                "", //data
+                "e", //data
                 packet,
                 packet_size);
 
