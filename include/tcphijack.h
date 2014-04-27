@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <string.h> //memset()
 #include <unistd.h> //sleep()
+#include <stdint.h>
 
 //Socket stuff
 #include <sys/socket.h>
@@ -29,5 +30,6 @@ struct pseudoTCPPacket {
   uint8_t protocol;
   uint16_t TCP_len;
 };
+
 
 #endif
