@@ -1,4 +1,4 @@
-#include "tcphijack.h"
+#include "tcp-disrupt.h"
 
 void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
   int bytes;
@@ -38,43 +38,40 @@ void gen_packet(  char *srcIP,
   //strcpy(packet_data, data);
 
   //Populate ipHdr
-  ipHdr->ihl = 5; //5 x 32-bit words in the header
-  ipHdr->version = 4; // ipv4
-  ipHdr->tos = 0;// //tos = [0:5] DSCP + [5:7] Not used, low delay
-  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + 1;//strlen(packet_data); //total lenght of packet. len(data) = 0
-  ipHdr->id = htons(54321); // 0x00; //16 bit id
-  ipHdr->frag_off = 0x00; //16 bit field = [0:2] flags + [3:15] offset = 0x0
-  ipHdr->ttl = 0xFF; //16 bit time to live (or maximal number of hops)
-  ipHdr->protocol = IPPROTO_TCP; //TCP protocol
-  ipHdr->check = 0; //16 bit checksum of IP header. Can't calculate at this point
-  ipHdr->saddr = inet_addr(srcIP); //32 bit format of source address
-  ipHdr->daddr = inet_addr(dstIP); //32 bit format of source address
+  ipHdr->ihl = 5;                                                      //5 x 32-bit words in the header
+  ipHdr->version = 4;                                                  // ipv4
+  ipHdr->tos = 0;                                                      //tos = [0:5] DSCP + [5:7] Not used, low delay
+  ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + 1;   //strlen(packet_data);                                                          //total lenght of packet. len(data) = 0
+  ipHdr->id = htons(54321);                                            // 0x00: 16 bit id
+  ipHdr->frag_off = 0x00;                                              //16 bit field = [0:2] flags + [3:15] offset = 0x0
+  ipHdr->ttl = 0xFF;                                                   //16 bit time to live (or maximal number of hops)
+  ipHdr->protocol = IPPROTO_TCP;                                       //TCP protocol
+  ipHdr->check = 0;                                                    //16 bit checksum of IP header. Can't calculate at this point
+  ipHdr->saddr = inet_addr(srcIP);                                     //32 bit format of source address
+  ipHdr->daddr = inet_addr(dstIP);                                     //32 bit format of source address
 
   //Now we can calculate the check sum for the IP header check field
   ipHdr->check = csum((unsigned short *) packet, ipHdr->tot_len); 
 
   //Populate tcpHdr
-  tcpHdr->source = htons(srcPort); //16 bit in nbp format of source port
-  tcpHdr->dest = htons(dstPort);   //16 bit in nbp format of destination port
-  tcpHdr->seq = htonl(seq); //seq; //32 bit sequence number, initially set to zero
-  tcpHdr->ack_seq = htonl(ack_seq);//ack_seq; //32 bit ack sequence number, depends whether ACK is set or not
-  tcpHdr->doff = 5; //4 bits: 5 x 32-bit words on tcp header
-  tcpHdr->res1 = 0; //4 bits: Not used
-  tcpHdr->cwr = 0; //Congestion control mechanism
-  tcpHdr->ece = 0; //Congestion control mechanism
-  tcpHdr->urg = 0; //Urgent flag
-  tcpHdr->ack = ack; //Acknownledge
-  tcpHdr->psh = 0; //Push data immediately
-  tcpHdr->rst = 0; //RST flag
-  tcpHdr->syn = syn; //SYN flag
-  tcpHdr->fin = 0; //Terminates the connection
-  tcpHdr->window = htons(43690);//0xFFFF; //16 bit max number of databytes 
-  tcpHdr->check = 0; //16 bit check sum. Can't calculate at this point
-  tcpHdr->urg_ptr = 0; //16 bit indicate the urgent data. Only if URG flag is set
+  tcpHdr->source = htons(srcPort);        //16 bit in nbp format of source port
+  tcpHdr->dest = htons(dstPort);          //16 bit in nbp format of destination port
+  tcpHdr->seq = htonl(seq);               //seq: 32 bit sequence number, initially set to zero
+  tcpHdr->ack_seq = htonl(ack_seq);       //ack_seq: 32 bit ack sequence number, depends whether ACK is set or not
+  tcpHdr->doff = 5;                       //4 bits: 5 x 32-bit words on tcp header
+  tcpHdr->res1 = 0;                       //4 bits: Not used
+  tcpHdr->urg = 0;                        //Urgent flag
+  tcpHdr->ack = ack;                      //Acknownledge
+  tcpHdr->psh = 0;                        //Push data immediately
+  tcpHdr->rst = 0;                        //RST flag
+  tcpHdr->syn = syn;                      //SYN flag
+  tcpHdr->fin = 0;                        //Terminates the connection
+  tcpHdr->window = htons(43690);          //0xFFFF: 16 bit max number of databytes 
+  tcpHdr->check = 0;                      //16 bit check sum. Can't calculate at this point
+  tcpHdr->urg_ptr = 0;                    //16 bit indicate the urgent data. Only if URG flag is set
 
   printf("seq: %u\n", tcpHdr->seq);
   printf("ack_seq: %u\n", tcpHdr->ack_seq);
-
 
   //Now we can calculate the checksum for the TCP header
   pTCPPacket.srcAddr = inet_addr(srcIP); //32 bit format of source address

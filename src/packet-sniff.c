@@ -1,10 +1,10 @@
-#include "../include/packet-sniff.h"
+#include "packet-sniff.h"
 
 int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface){
     char                errbuf[PCAP_ERRBUF_SIZE];
     char                packetFilterString[128];
     char                *device;
-    char                *stringPtr;
+//    char                *stringPtr;
     int                 datalinkType;
     int                 maxBytesToCapture = 65535;
     pcap_t              *packetDescriptor;

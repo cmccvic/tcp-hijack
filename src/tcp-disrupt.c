@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
  * Prints out the usage string of this program.
  * @param name String containing the name of the program.
  */
-static void display_usage(char *name) {
+void display_usage(char *name) {
     printf("%s <--client client_ip> <--server server_ip> [--port port] [--interface interface]\n", name);
     exit(EXIT_SUCCESS);
 }
