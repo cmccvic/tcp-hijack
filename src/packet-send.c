@@ -12,12 +12,12 @@ void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     }
 }
 
-void gen_packet() {
+void gen_packet_old() {
 
 }
 
 
-void gen_packet_old(  char *srcIP,
+void gen_packet(  char *srcIP,
                   char *dstIP,
                   u_int16_t dstPort,
                   u_int16_t srcPort,
