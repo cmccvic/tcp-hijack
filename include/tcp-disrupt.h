@@ -19,7 +19,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "tcphijack.h"
+#include "packet-send.h"
 #include "packet-sniff.h"
 
 /* Displays the usage string for this program */
