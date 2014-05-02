@@ -22,8 +22,8 @@ packet-sniff.o: packet-sniff.c ../include/packet-sniff.h
 tcphijack.o: tcphijack.c ../include/tcphijack.h
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
 
-run: tcphijack
-	sudo ./$(BIN)
+run: tcp-disrupt
+	sudo ./$(DIST)/$(BIN)
 
 clean:
 	rm -f *.o *.out
