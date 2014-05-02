@@ -70,9 +70,9 @@ int main(int argc, char **argv) {
         printf("Interface %s\n", interface);
     }
 
-    printf("clientIP: %s\n", clientIP);
-    printf("clientIP: %s\n", serverIP);
-    printf("clientIP: %d\n", clientPort);
+    printf("Client IP: %s\n", clientIP);
+    printf("Server IP: %s\n", serverIP);
+    printf("Server Port: %d\n", clientPort);
 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
