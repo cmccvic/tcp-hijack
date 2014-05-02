@@ -92,7 +92,13 @@ int main(int argc, char **argv) {
     addr_in.sin_addr.s_addr = inet_addr(serverIP);
 
     //Allocate mem for ip and tcp headers and zero the allocation
-  
+    
+
+    int result = tcpDisrupt(clientIP, serverIP, interface);
+    if (result){
+        fprintf(stderr, "[FAIL] Failed to sniff the network. Quitting.\n");
+        exit(result);
+    }
  
     //Send lots of packets
     int k = 5;
