@@ -22,5 +22,5 @@
 *.x86_64
 *.hex
 
-tcphijack
+dist/
 

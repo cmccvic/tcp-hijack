@@ -1,15 +1,17 @@
 CC = gcc
 INCLUDES = -I../include
-CFLAGS = -Wall -Werror -E $(INCLUDES)
+CFLAGS = -Wall -Werror $(INCLUDES)
 LIBS = -lpcap
-BIN = tcphijack
+BIN = tcp-disrupt
+DIST = ../dist
 
 .PHONY: clean all run
 
-all: tcphijack
+all: tcp-disrupt
 
-tcphijack:	tcphijack.o tcp-disrupt.o
-	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o tcp-disrupt.o
+tcp-disrupt: tcp-disrupt.o tcphijack.o packet-sniff.o
+	mkdir -p $(DIST);
+	$(CC) $(CFLAGS) -o $(DIST)/$(BIN) ../src/tcphijack.o ../src/tcp-disrupt.o ../src/packet-sniff.o $(LIBS)
 
 tcp-disrupt.o: tcp-disrupt.c ../include/tcp-disrupt.h
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)	
@@ -24,4 +26,5 @@ run: tcphijack
 	sudo ./$(BIN)
 
 clean:
-	rm -f *.o *.out $(BIN)
+	rm -f *.o *.out
+	rm -rf $(DIST)

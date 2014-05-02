@@ -1,10 +1,10 @@
-.PHONY: all tcphijack clean run
+.PHONY: all tcp-disrupt clean run
 
 all:
 	cd src; make
 
-tcphijack:
-	cd src; make tcphijack
+tcp-disrupt:
+	cd src; make tcp-disrupt
 
 run:
 	cd src; make run
