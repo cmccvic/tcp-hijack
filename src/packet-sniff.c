@@ -1,4 +1,4 @@
-#include "spdcx-sniff.h"
+#include "../include/packet-sniff.h"
 
 //#define SAMPLE_FILTER "tcp and port 80"
 //#define SAMPLE_FILTER "udp and port 53"
