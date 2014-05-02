@@ -70,8 +70,13 @@ void gen_packet(  char *srcIP,
   tcpHdr->check = 0;                      //16 bit check sum. Can't calculate at this point
   tcpHdr->urg_ptr = 0;                    //16 bit indicate the urgent data. Only if URG flag is set
 
+/* TODO: Check the Linux -> BSD conversion for these fields: */
+//  tcpHdr->cwr = 0; //Congestion control mechanism
+//  tcpHdr->ece = 0; //Congestion control mechanism
+
   printf("seq: %u\n", tcpHdr->seq);
   printf("ack_seq: %u\n", tcpHdr->ack_seq);
+
 
   //Now we can calculate the checksum for the TCP header
   pTCPPacket.srcAddr = inet_addr(srcIP); //32 bit format of source address
