@@ -5,8 +5,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
-//#include <linux/ip.h>
-//#include <linux/tcp.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
 #include <netinet/tcp.h>
