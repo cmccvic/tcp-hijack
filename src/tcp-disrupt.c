@@ -4,7 +4,7 @@ static const struct option longOpts[] = {
     { "client", required_argument, NULL, 'c' },
     { "server", required_argument, NULL, 's' },
     { "port", required_argument, NULL, 'p' },
-    { "interface", optional_argument, NULL, 'i' },
+    { "interface", required_argument, NULL, 'i' },
     { NULL, no_argument, NULL, 0 }
 };
 
