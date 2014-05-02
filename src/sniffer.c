@@ -63,5 +63,7 @@ if(mask == NULL) {
 
 printf("MASK: %s\n",mask);
 
+printf("rfmon: %d\n", pcap_set_rfmon());
+
 return 0;
 }

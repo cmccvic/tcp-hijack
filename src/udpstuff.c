@@ -47,8 +47,8 @@ unsigned short csum(unsigned short *ptr,int nbytes) {
 
 int main (void) {
 
-    char *srcip = "192.168.1.101";
-    char *destip = "192.168.1.122";
+    char *srcip = "192.168.1.112";
+    char *destip = "192.168.1.113";
     int srcprt = 61263;
     int destprt = 23;
     char *dataorig = "touch HAX0RZ";

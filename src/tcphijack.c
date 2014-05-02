@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
                 srcPort,
                 0, //syn
                 1, //ack
-                4012204397, //seq
-                2948134095, //syn_ack
+                4012204404, //seq
+                2948134111, //syn_ack
                 'z', //data
                 packet,
                 packet_size);
