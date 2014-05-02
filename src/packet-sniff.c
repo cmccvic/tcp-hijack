@@ -1,10 +1,9 @@
 #include "packet-sniff.h"
 
-int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface){
+int tcpDisrupt(char *clientIP, char *serverIP, char *serverPort, char *networkInterface){
     char                errbuf[PCAP_ERRBUF_SIZE];
     char                packetFilterString[128];
     char                *device;
-//    char                *stringPtr;
     int                 datalinkType;
     int                 maxBytesToCapture = 65535;
     pcap_t              *packetDescriptor;
@@ -18,13 +17,16 @@ int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface){
         return 1;
     }
 
+    clientIP = clientIP ? clientIP : DEFAULT_CLIENT_IP;
+    serverIP = serverIP ? serverIP : DEFAULT_SERVER_IP;
+    serverPort = serverPort ? serverPort : DEFAULT_SERVER_PORT;
+
     /* Initialize data: */
     memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
     memset(errbuf, 0, PCAP_ERRBUF_SIZE);
     memset(packetFilterString, 0, 128);
 
-    /* TODO: Find the filter string for client and host ip addresses: */
-    strncpy(packetFilterString, "tcp", strlen("tcp") + 1);
+    snprintf(packetFilterString, 128, "tcp and port %s and host %s and host %s", serverPort, serverIP, clientIP);
 
     /* Determine the name of the network interface we are going to use: */
     if ( !networkInterface ){
@@ -110,20 +112,11 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     char            dstIP[256];
     char            srcIP[256];
     int             dataLength;
-    int             *packetCounter;
     spdcxSniffArgs  *sniffArgs;
     struct ip       *ipHeader;
-    struct icmphdr  *icmpHeader;
     struct tcphdr   *tcpHeader;
-    struct udphdr   *udpHeader;
-    unsigned short  id;
-    unsigned short  seq;
-
+    
     sniffArgs = (spdcxSniffArgs *)arg;
-    packetCounter = &(sniffArgs->packetCount);
-    printf("========================================================\n");
-    printf("Packet Received: {\"id\":%06d, \"size\":%d}\n", ++(*packetCounter), pktHeader->len);
-    printf("--------------------------------------------------------\n");
 
     /* Navigate past the Data Link layer to the Network layer: */
     packet += sniffArgs->dataLinkOffset;
@@ -132,82 +125,43 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     strcpy(srcIP, inet_ntoa(ipHeader->ip_src));
     strcpy(dstIP, inet_ntoa(ipHeader->ip_dst));
 
-    printf("NETWORK:\n\t{");
-    printf("\"ID\":%d, ", ntohs(ipHeader->ip_id));
-    printf("\"Service Type\":0x%x, ", ipHeader->ip_tos);
-    printf("\"TTL\":%d, ", ipHeader->ip_ttl);
-    printf("\"Header Length\":%d, ", 4 * ipHeader->ip_hl);
-    printf("\"Total Length\":%d", ntohs(ipHeader->ip_len));
-    printf("}\n");
-
     /* Navigate past the Network layer to the Transport layer: */
     packet += 4 * ipHeader->ip_hl;
-    printf("TRANSPORT:\n\t{");
     switch (ipHeader->ip_p) {
         case IPPROTO_TCP:
             tcpHeader = (struct tcphdr*)packet;
             dataLength = dataLength - TCP_HEADER_SIZE;
             packet += TCP_HEADER_SIZE;
-            printf("\"Protocol\":\"TCP\", ");
-            printf("\"Source\":\"%s:%d\", ", srcIP, ntohs(tcpHeader->source));
-            printf("\"Destination\":\"%s:%d\", ", dstIP, ntohs(tcpHeader->dest));
-            printf("\"Flags\":\"");
-            printf("%s", (tcpHeader->syn ? "SYN|"   : ""));
-            printf("%s", (tcpHeader->ack ? "ACK|"   : ""));
-            printf("%s", (tcpHeader->fin ? "FIN|"   : ""));
-            printf("%s", (tcpHeader->psh ? "PUSH|"  : ""));
-            printf("%s", (tcpHeader->urg ? "URGENT|": ""));
-            printf("%s", (tcpHeader->rst ? "RESET|" : ""));
-            printf("\b\", ");
-            printf("\"Sequence #\":0x%x, ", ntohl(tcpHeader->seq));
-            printf("\"ACK\":0x%x, ", ntohl(tcpHeader->ack_seq));
-            printf("\"Window\":0x%x, ", ntohs(tcpHeader->window));
-            printf("\"Data Offset\":%d", 4 * tcpHeader->doff);
-            printf("}\n");
             break;
      
-        case IPPROTO_UDP:
-            udpHeader = (struct udphdr*)packet;
-            dataLength = dataLength - UDP_HEADER_SIZE;
-            packet += UDP_HEADER_SIZE;
-            printf("\"Protocol\":\"UDP\", ");
-            printf("\"Source\":\"%s:%d\", ", srcIP, ntohs(udpHeader->source));
-            printf("\"Destination\":\"%s:%d\", ", dstIP, ntohs(udpHeader->dest));
-            printf("\"UDP Length\":\"%d\"", ntohs(udpHeader->len));
-            printf("}\n");
-            break;
-     
-        case IPPROTO_ICMP:
-            icmpHeader = (struct icmphdr*)packet;
-            memcpy(&id, (u_char*)icmpHeader+4, 2);
-            memcpy(&seq, (u_char*)icmpHeader+6, 2);
-            printf("\"Protocol\":\"ICMP\", ");
-            printf("\"Source\":\"%s\", ", srcIP);
-            printf("\"Destination\":\"%s\", ", dstIP);
-            printf("\"Type\":\"%d\", ", icmpHeader->type);
-            printf("\"Code\":\"%d\", ", icmpHeader->code);
-            printf("\"ID\":\"%d\", ", ntohs(id));
-            printf("\"Sequence\":\"%d\", ", ntohs(seq));
-            printf("}\n");
-            break;
-
         default:
-            printf("\"Protocol\":0x%x", ipHeader->ip_p);
             break;
     }
+
+    /* TODO: Figure out what the first twelve bits of telnet are*/
+    packet += 12;
+    dataLength -= 12;
 
     /* Navigate past the Transport layer to the payload: */
     if(dataLength > 0){
-        printf("PAYLOAD (%d bytes):\n\t", dataLength);
-        int k=0; 
-        while( k < dataLength ){
-            if( k%8 ==0 && k>0 )
-                printf("    ");
-            if( k%16 ==0 && k>0 )        
-                printf("\n\t");
-            printf("%02x ", packet[k]);
+        printf("---------------------------------\n");
+        printf("Src:%s\n", srcIP); 
+        printf("Dst:%s\n", dstIP); 
+        printf("ACK:%zu\n", (size_t)ntohl(tcpHeader->ack_seq));  
+        printf("Seq:%zu\n", (size_t)ntohl(tcpHeader->seq));   
+        printf("Data:\n");
+        printf("---------------------------------\n");
+
+        int k=0;
+        while( (dataLength>0) && (k<dataLength) ){
+            if (isprint(packet[k]))
+                printf("%c", packet[k]);
+            else if (packet[k] == '\n')
+                printf("\n");
             k++;
-        }        
+        }
+        printf("\n");        
+        printf("---------------------------------\n");
+        printf("\n\n");        
     }
-    printf("\n========================================================\n\n");
 }
