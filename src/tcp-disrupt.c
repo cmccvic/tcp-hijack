@@ -15,8 +15,8 @@ int main(int argc, char **argv) {
     int opt = 0, longIndex = 0;
 
     //Setup
-    char *clientIP;
-    char *serverIP;
+    char *clientIP = NULL;
+    char *serverIP = NULL;
     char *interface = NULL;
     int clientPort = 23;
     int serverPort = 59590;
@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
             case 'h':   /* h or --help */
             case '?':
                 display_usage(argv[0]);
+                exit(EXIT_SUCCESS);
                 break;     
             default:
                 /* Shouldn't get here */
@@ -52,10 +53,26 @@ int main(int argc, char **argv) {
         }
     }
   
+    if(clientIP == NULL) {
+        fprintf(stderr, "Client IP address was not provided.\n");
+        display_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if(serverIP == NULL) {
+        fprintf(stderr, "Server IP address was not provided.\n");
+        display_usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
     // TODO: Remove this
     if(interface != NULL) {
         printf("Interface %s\n", interface);
     }
+
+    printf("clientIP: %s\n", clientIP);
+    printf("clientIP: %s\n", serverIP);
+    printf("clientIP: %d\n", clientPort);
 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
@@ -104,6 +121,5 @@ int main(int argc, char **argv) {
  * @param name String containing the name of the program.
  */
 void display_usage(char *name) {
-    printf("%s <--client client_ip> <--server server_ip> [--port port] [--interface interface]\n", name);
-    exit(EXIT_SUCCESS);
+    printf("%s --client client_ip --server server_ip [--port server_port] [--interface interface]\n", name);
 }
