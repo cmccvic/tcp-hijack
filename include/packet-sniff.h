@@ -62,8 +62,11 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pkthdr, const u_char *
 /* Using the network interface provided, disrupt the  TCP session between the client
  * and server. Providing a NULL to the network interface argument will allow the
  * pcap library to automatically select a device on the computer.
+ *
+ * Returns: 0 on Success
+ *          1 on Failure
  */
-void tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
+int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
 
 
 #endif
