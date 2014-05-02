@@ -1,42 +1,39 @@
 #include "../include/packet-sniff.h"
 
-//#define SAMPLE_FILTER "tcp and port 80"
-//#define SAMPLE_FILTER "udp and port 53"
-#define SAMPLE_FILTER ""
-
-int main(int argc, char const *argv[]){
+int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface){
     char                errbuf[PCAP_ERRBUF_SIZE];
     char                packetFilterString[128];
-	char                *device;
+    char                *device;
+    char                *stringPtr;
     int                 datalinkType;
     int                 maxBytesToCapture = 65535;
-	pcap_t              *packetDescriptor;
+    pcap_t              *packetDescriptor;
     struct bpf_program  packetFilter;
     uint32_t            srcIP;
     uint32_t            netmask;
 
-	spdcxSniffArgs *sniffArgs;
-	if( !(sniffArgs = malloc(sizeof(spdcxSniffArgs))) ){
-		fprintf(stderr, "[FAIL] Unable to obtain memory.\n");
-		return 1;
-	}
+    spdcxSniffArgs *sniffArgs;
+    if( !(sniffArgs = malloc(sizeof(spdcxSniffArgs))) ){
+        fprintf(stderr, "[FAIL] Unable to obtain memory.\n");
+        return 1;
+    }
 
     /* Initialize data: */
-	memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
+    memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
     memset(errbuf, 0, PCAP_ERRBUF_SIZE);
     memset(packetFilterString, 0, 128);
-    strncpy(packetFilterString, SAMPLE_FILTER, 127);
 
-	/* Find suitable network hardware to monitor: */
-	if(argc < 2) {	
-		if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
-			fprintf(stderr, "[FAIL] pcap_lookupdev returned: \"%s\"\n", errbuf);
-	        free(sniffArgs);
-			return 1;
-		} else printf("[INFO] Found Hardware: %s\n", device);
-	} else {
-		device = (char*) argv[1];
-	}
+    /* TODO: Find the filter string for client and host ip addresses: */
+    strncpy(packetFilterString, "tcp", strlen("tcp") + 1);
+
+    /* Determine the name of the network interface we are going to use: */
+    if ( !networkInterface ){
+        if ( (device = pcap_lookupdev(errbuf)) <= 0 ){
+            fprintf(stderr, "[FAIL] pcap_lookupdev returned: \"%s\"\n", errbuf);
+            free(sniffArgs);
+            return 1;
+        } else printf("[INFO] Found Hardware: %s\n", device);
+    } else device = networkInterface;
 
     /* Obtain a descriptor to monitor the hardware: */
     if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
@@ -45,7 +42,7 @@ int main(int argc, char const *argv[]){
         return 1;
     } else printf("[INFO] Obtained Socket Descriptor.\n");
 
-	/* Determine the data link type of the descriptor we obtained: */
+    /* Determine the data link type of the descriptor we obtained: */
     if ((datalinkType = pcap_datalink(packetDescriptor)) < 0 ){
         fprintf(stderr, "[FAIL] pcap_datalink returned: \"%s\"\n", pcap_geterr(packetDescriptor));
         free(sniffArgs);
@@ -54,31 +51,31 @@ int main(int argc, char const *argv[]){
  
     /* Determine the header length of the data link layer: */
     switch (datalinkType) {
-	    case DLT_NULL:
-	    	sniffArgs->dataLinkOffset = 4;
-			printf("Listening on an NULL connection. Data Link Offset: 14\n");
-	        break;
+        case DLT_NULL:
+            sniffArgs->dataLinkOffset = 4;
+            printf("Listening on an NULL connection. Data Link Offset: 14\n");
+            break;
 
-	    case DLT_EN10MB:
-	    	sniffArgs->dataLinkOffset = 14;
-			printf("Listening on an Ethernet connection. Data Link Offset: 14\n");
-	        break;
-	 
-	    case DLT_SLIP:
-	    case DLT_PPP:
-	    	sniffArgs->dataLinkOffset = 24;
-			printf("Listening on an SLIP/PPP connection. Data Link Offset: 14\n");
-	        break;
-	 
-	 	case DLT_IEEE802_11:
-	    	sniffArgs->dataLinkOffset = 22;
-			printf("Listening on an Wireless connection. Data Link Offset: 22\n");
-	        break;
-	 	
-	    default:
-	    	printf("[ERROR]: Unsupported datalink type: %d\n", datalinkType);
+        case DLT_EN10MB:
+            sniffArgs->dataLinkOffset = 14;
+            printf("Listening on an Ethernet connection. Data Link Offset: 14\n");
+            break;
+     
+        case DLT_SLIP:
+        case DLT_PPP:
+            sniffArgs->dataLinkOffset = 24;
+            printf("Listening on an SLIP/PPP connection. Data Link Offset: 14\n");
+            break;
+     
+        case DLT_IEEE802_11:
+            sniffArgs->dataLinkOffset = 22;
+            printf("Listening on an Wireless connection. Data Link Offset: 22\n");
+            break;
+        
+        default:
+            printf("[ERROR]: Unsupported datalink type: %d\n", datalinkType);
             free(sniffArgs);
-	        return 2;
+            return 2;
     }
 
     // Get network device source IP address and netmask.
@@ -103,9 +100,9 @@ int main(int argc, char const *argv[]){
     } else printf("[INFO] Packet Filter: %s\n", packetFilterString);
 
     /* Start the loop: */
-	pcap_loop(packetDescriptor, -1, processPacket, (u_char *)sniffArgs);
+    pcap_loop(packetDescriptor, -1, processPacket, (u_char *)sniffArgs);
     free(sniffArgs);
-	return 0;
+    return 0;
 }
 
 
@@ -125,7 +122,7 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     sniffArgs = (spdcxSniffArgs *)arg;
     packetCounter = &(sniffArgs->packetCount);
     printf("========================================================\n");
-	printf("Packet Received: {\"id\":%06d, \"size\":%d}\n", ++(*packetCounter), pktHeader->len);
+    printf("Packet Received: {\"id\":%06d, \"size\":%d}\n", ++(*packetCounter), pktHeader->len);
     printf("--------------------------------------------------------\n");
 
     /* Navigate past the Data Link layer to the Network layer: */

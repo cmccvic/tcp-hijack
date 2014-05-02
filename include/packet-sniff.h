@@ -1,6 +1,8 @@
 #ifndef PACKET_SNIFF_H
 #define PACKET_SNIFF_H
 
+
+/* Include dependencies. */
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <netinet/ip_icmp.h>
@@ -11,12 +13,13 @@
 #include <string.h>
 #include <unistd.h>
 
+
 /* Standard header sizes for different transport layer protocols. */
 #define UDP_HEADER_SIZE 8
 #define TCP_HEADER_SIZE 20
 
 
-/* DNS Header bit flags as defined in RFC1035 */
+/* DNS Header bit flags as defined in RFC1035. */
 #define DNS_HEADER_QR_QUERY					0x0000
 #define DNS_HEADER_QR_RESPONSE 				0x8000
 #define DNS_HEADER_OPCODE_QUERY				0x0000
@@ -59,7 +62,11 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pkthdr, const u_char *
 /* Using the network interface provided, disrupt the  TCP session between the client
  * and server. Providing a NULL to the network interface argument will allow the
  * pcap library to automatically select a device on the computer.
+ *
+ * Returns: 0 on Success
+ *          1 on Failure
  */
-void tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
+int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
+
 
 #endif
