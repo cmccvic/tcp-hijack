@@ -22,6 +22,25 @@
 //#include <netinet/tcp.h>
 //#include <netinet/ip.h>
 
+
+void gen_packet(  char *srcIP,
+                  char *dstIP,
+                  u_int16_t dstPort,
+                  u_int16_t srcPort,
+                  u_int32_t syn,
+                  u_int16_t ack,
+                  u_int32_t seq,
+                  u_int32_t ack_seq,
+                  char data,
+                  char *packet,
+                  uint32_t packet_size);
+
+void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
+
+//Calculate the TCP header checksum of a string (as specified in rfc793)
+//Function from http://www.binarytides.com/raw-sockets-c-code-on-linux/
+unsigned short csum(unsigned short *ptr,int nbytes);
+
 //Pseudo header needed for calculating the TCP header checksum
 struct pseudoTCPPacket {
   uint32_t srcAddr;
