@@ -1,8 +1,8 @@
-#include "packet-sniff.h"
+#include "tcp-disrupt.h"
 
 int tcpDisrupt(char *clientIP, char *serverIP, char *serverPort, char *networkInterface){
     char                errbuf[PCAP_ERRBUF_SIZE];
-    char                packetFilterString[128];
+    char                packetFilterString[256];
     char                *device;
     int                 datalinkType;
     int                 maxBytesToCapture = 65535;
@@ -24,9 +24,9 @@ int tcpDisrupt(char *clientIP, char *serverIP, char *serverPort, char *networkIn
     /* Initialize data: */
     memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
     memset(errbuf, 0, PCAP_ERRBUF_SIZE);
-    memset(packetFilterString, 0, 128);
+    memset(packetFilterString, 0, 256);
 
-    snprintf(packetFilterString, 128, "tcp and port %s and host %s and host %s", serverPort, serverIP, clientIP);
+    snprintf(packetFilterString, 256, "tcp and port %s and host %s and host %s", serverPort, serverIP, clientIP);
 
     /* Determine the name of the network interface we are going to use: */
     if ( !networkInterface ){
@@ -112,11 +112,9 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     char            dstIP[256];
     char            srcIP[256];
     int             dataLength;
-    spdcxSniffArgs  *sniffArgs;
     struct ip       *ipHeader;
     struct tcphdr   *tcpHeader;
-    
-    sniffArgs = (spdcxSniffArgs *)arg;
+    spdcxSniffArgs  *sniffArgs = (spdcxSniffArgs *)arg;;
 
     /* Navigate past the Data Link layer to the Network layer: */
     packet += sniffArgs->dataLinkOffset;
@@ -145,8 +143,10 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     /* Navigate past the Transport layer to the payload: */
     if(dataLength > 0){
         printf("---------------------------------\n");
-        printf("Src:%s\n", srcIP); 
+        printf("Src:%s\n", srcIP);
+        printf("Src-Port: %d\n", ntohs(tcpHeader->source));
         printf("Dst:%s\n", dstIP); 
+        printf("Dst-Port: %d\n", ntohs(tcpHeader->dest));
         printf("ACK:%zu\n", (size_t)ntohl(tcpHeader->ack_seq));  
         printf("Seq:%zu\n", (size_t)ntohl(tcpHeader->seq));   
         printf("Data:\n");
