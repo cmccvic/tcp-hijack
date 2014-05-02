@@ -8,11 +8,14 @@ BIN = tcphijack
 
 all: tcphijack
 
-tcphijack:	tcphijack.o
-	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o
+tcphijack:	tcphijack.o tcp-disrupt.o
+	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o tcp-disrupt.o
 
 tcphijack.o: tcphijack.c ../include/tcphijack.h
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
+
+tcp-disrupt.o: tcp-disrupt.c ../include/tcp-disrupt.h
+	$(CC) $(CFLAGS) -c $*.c $(LIBS)	
 
 run: tcphijack
 	sudo ./$(BIN)
