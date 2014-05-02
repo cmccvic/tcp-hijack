@@ -1,6 +1,6 @@
 #include "../include/packet-sniff.h"
 
-int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
+int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface){
     char                errbuf[PCAP_ERRBUF_SIZE];
     char                packetFilterString[128];
     char                *device;
@@ -33,7 +33,7 @@ int tcpDisrupt(char *clientIP, char *serverIP, char *networkInterface);
             free(sniffArgs);
             return 1;
         } else printf("[INFO] Found Hardware: %s\n", device);
-    } else device = (char*) argv[1];
+    } else device = networkInterface;
 
     /* Obtain a descriptor to monitor the hardware: */
     if ( (packetDescriptor = pcap_open_live(device, maxBytesToCapture, 1, 512, errbuf)) < 0 ){
