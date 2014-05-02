@@ -4,27 +4,18 @@ CFLAGS = -Wall -Werror $(INCLUDES)
 LIBS = -lpcap
 BIN = tcphijack
 
-.PHONY: clean all run sniff
+.PHONY: clean all run
 
-all: tcphijack sniffer
+all: tcphijack
 
 tcphijack:	tcphijack.o
 	$(CC) $(CFLAGS) -o $(BIN) tcphijack.o
 
-sniffer: sniffer.o
-	$(CC) $(CFLAGS) -o sniffer sniffer.o $(LIBS)
-
 tcphijack.o: tcphijack.c ../include/tcphijack.h
 	$(CC) $(CFLAGS) -c $*.c $(LIBS)
-
-sniffer.o: sniffer.c
-	$(CC) $(CFLAGS) -c $*.c $(LIBS)
-
-sniff: sniffer
-	sudo ./sniffer
 
 run: tcphijack
 	sudo ./$(BIN)
 
 clean:
-	rm -f *.o *.out $(BIN) sniffer
+	rm -f *.o *.out $(BIN)
