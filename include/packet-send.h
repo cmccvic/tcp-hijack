@@ -35,7 +35,7 @@ bool ack_flood(     char *srcIP,
                     struct sockaddr_in addr_in);
 
 
-bool send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
+int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
 
 //Calculate the TCP header checksum of a string (as specified in rfc793)
 //Function from http://www.binarytides.com/raw-sockets-c-code-on-linux/

