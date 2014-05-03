@@ -9,6 +9,7 @@ void fill_packet(   char *srcIP,
                     u_int16_t ack,
                     u_int32_t seq,
                     u_int32_t ack_seq,
+                    u_int16_t rst,
                     const char * data,
                     char *packet,
                     uint32_t packet_size);
