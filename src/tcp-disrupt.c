@@ -11,22 +11,12 @@ static const struct option longOpts[] = {
 static const char *optString = "p:c:s:i:h?";
 
 int main(int argc, char **argv) {
-    int sock, one = 1;
-    int opt = 0, longIndex = 0;
-
-    //Setup
-    char *clientIP = NULL;
-    char *serverIP = NULL;
-    char *interface = NULL;
-    char *clientPort = NULL;
-    char *serverPort = NULL;
-    int packet_size = 44;
-
-    //Ethernet header + IP header + TCP header + data
-    char packet[packet_size];
-
-    //Address struct to sendto()
-    struct sockaddr_in addr_in;
+    int     opt         = 0;
+    int     longIndex   = 0;
+    char    *clientIP   = NULL;
+    char    *serverIP   = NULL;
+    char    *interface  = NULL;
+    char    *serverPort = NULL;
 
     while((opt = getopt_long(argc, argv, optString, longOpts, &longIndex)) != -1) {
         switch( opt ) {
@@ -77,6 +67,53 @@ int main(int argc, char **argv) {
         exit(result);
     }
  
+    return 0;
+}
+
+/**
+ * Prints out the usage string of this program.
+ * @param name String containing the name of the program.
+ */
+void display_usage(char *name) {
+    printf("%s --client client_ip --server server_ip [--port server_port] [--interface interface]\n", name);
+}
+
+
+/**
+ * Throw off the connection between two hosts in an already established TCP session.
+ * The function should save the state of the sequence and ack numbers between calls.
+ *
+ * The end goal is to leave the source IP without a connection and we will hijack
+ * the connection state with the destination, continuing to send data.
+ *
+ * If this function is currently attempting to disrupt the session, it will simply return to it's caller after the 
+ * attempt to disrupt is made.
+ *
+ * If this function has successfully disrupted the session, it should handle the events that
+ * take place after the connection has been hijacked.
+ *
+ * Once the function has been hijacked, and the desired actions have been taken on the hijacked session, this function should exit tcp-disrupt. 
+ *
+ * @param sourceIP          String representation of the source's IP address.
+ * @param sourcePort        The port used by the source in the TCP session being hijacked.
+ * @param destinationIP     String representation of the destination's IP address.
+ * @param destinationPort   The port used by the destination in the TCP session being hijacked.
+ * @param sequenceNumber    The sequence number to be acknowledged by the desination.
+ * @param ackNumber         The last sequence number acknowledged by the source.
+ */
+void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint16_t ackNumber){
+
+/* TODO: Paul should throw off the connection established between the hosts represented by the given arguments:
+
+    int sock, one = 1;
+    int packet_size = 44;
+
+    //Ethernet header + IP header + TCP header + data
+    char packet[packet_size];
+
+    //Address struct to sendto()
+    struct sockaddr_in addr_in;
+
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket");
@@ -94,8 +131,6 @@ int main(int argc, char **argv) {
     addr_in.sin_port = htons(atoi(serverPort));
     addr_in.sin_addr.s_addr = inet_addr(serverIP);
 
-    //Allocate mem for ip and tcp headers and zero the allocation
-    
     //Send lots of packets
     int k = 5;
     while(k--) { 
@@ -114,14 +149,5 @@ int main(int argc, char **argv) {
         // TODO: Remove this break
         break;
     }
-  
-    return 0;
-}
-
-/**
- * Prints out the usage string of this program.
- * @param name String containing the name of the program.
- */
-void display_usage(char *name) {
-    printf("%s --client client_ip --server server_ip [--port server_port] [--interface interface]\n", name);
+*/
 }
