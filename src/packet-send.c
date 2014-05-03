@@ -135,3 +135,20 @@ unsigned short csum(unsigned short *ptr,int nbytes) {
 
     return(answer);
 }
+
+char* gen_packet(   char *srcIP,
+                    char *dstIP,
+                    u_int16_t dstPort,
+                    u_int16_t srcPort,
+                    u_int32_t syn,
+                    u_int16_t ack,
+                    u_int32_t seq,
+                    u_int32_t ack_seq,
+                    const char * data,
+                    uint32_t packet_size) {
+
+
+        char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data);
+        fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, seq, ack_seq, data, packet, packet_size);
+        return packet;
+}
