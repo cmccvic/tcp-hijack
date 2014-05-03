@@ -51,15 +51,15 @@ void fill_packet(   char *srcIP,
     //TCP header
     tcpHdr->source = htons(srcPort);
     tcpHdr->dest = htons(dstPort);
-    tcpHdr->seq = htonl(seq);
-    tcpHdr->ack_seq = htonl(ack_seq);
+    tcpHdr->seq = htonl(seq);           //sequence number
+    tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
     tcpHdr->doff = 5;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
     tcpHdr->psh = 0;
-    tcpHdr->ack = ack;
+    tcpHdr->ack = ack;                  //if you are acknowledging a sec number
     tcpHdr->urg = 0;
     tcpHdr->res2 = 0;
     tcpHdr->window = htons(43690);
