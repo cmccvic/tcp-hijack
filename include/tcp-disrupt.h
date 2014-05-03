@@ -17,6 +17,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "packet-send.h"
 #include "packet-sniff.h"

