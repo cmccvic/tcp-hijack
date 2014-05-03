@@ -23,4 +23,6 @@
 /* Displays the usage string for this program */
 void display_usage(char *name);
 
+void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint16_t ackNumber);
+
 #endif
