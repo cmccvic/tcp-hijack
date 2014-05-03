@@ -24,7 +24,7 @@ char* gen_packet(   char *srcIP,
                     const char * data,
                     uint32_t packet_size);
 
-bool ack_flood(     char *srcIP,
+bool seq_flood(     char *srcIP,
                     char *dstIP,
                     u_int16_t dstPort,
                     u_int16_t srcPort,
