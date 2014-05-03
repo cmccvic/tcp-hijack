@@ -1,18 +1,6 @@
 #ifndef TCPHIJACK_H
 #define TCPHIJACK_H
 
-void gen_packet(  char *srcIP,
-                  char *dstIP,
-                  u_int16_t dstPort,
-                  u_int16_t srcPort,
-                  u_int32_t syn,
-                  u_int16_t ack,
-                  u_int32_t seq,
-                  u_int32_t ack_seq,
-                  char data,
-                  char *packet,
-                  uint32_t packet_size);
-
 void fill_packet(   char *srcIP,
                     char *dstIP,
                     u_int16_t dstPort,
