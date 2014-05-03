@@ -28,17 +28,18 @@ void fill_packet(   char *srcIP,
     struct tcphdr *tcpHdr;
     char *pseudo_packet;
     struct pseudoTCPPacket pTCPPacket;
+    int data_length = strlen(data);
 
     memset(packet, 0 ,packet_size);
     ipHdr = (struct iphdr*) packet;
     tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
-    memcpy((char *)(packet + sizeof(struct iphdr) + sizeof(struct tcphdr)), data, strlen(data));
+    memcpy((char *)(packet + sizeof(struct iphdr) + sizeof(struct tcphdr)), data, data_length);
 
     //IP header
     ipHdr->ihl = 5;
     ipHdr->version = 4;
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data);
+    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
@@ -72,16 +73,16 @@ void fill_packet(   char *srcIP,
     pTCPPacket.dstAddr = inet_addr(dstIP);
     pTCPPacket.zero = 0;
     pTCPPacket.protocol = IPPROTO_TCP;
-    pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + strlen(data));
+    pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + data_length);
 
-    pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data)));
-    memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + strlen(data));
+    pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + data_length));
+    memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + data_length);
 
     memcpy(pseudo_packet, (char *) &pTCPPacket, sizeof(struct pseudoTCPPacket));
-    memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcpHdr, sizeof(struct tcphdr) + strlen(data));
+    memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcpHdr, sizeof(struct tcphdr) + data_length);
 
     tcpHdr->check = (csum((unsigned short *) pseudo_packet, (int) (sizeof(struct pseudoTCPPacket) + 
-          sizeof(struct tcphdr) +  strlen(data))));
+          sizeof(struct tcphdr) +  data_length)));
 
     free(pseudo_packet);
 
