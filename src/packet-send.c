@@ -1,5 +1,16 @@
 #include "tcp-disrupt.h"
 
+/** Sends an ACK flood.
+ *  
+ *  srcIP     - the ip to send the flood from
+ *  dstIP     - where to send the flood
+ *  dstPort   - the port to send the flood to
+ *  srcPort   - the port to send the flood from
+ *  sqe       - the starting seq number
+ *  ack_seq   - the starting ack number
+ *  n         - how many ack's to send
+ *  socket_fd - socket file descriptor
+ */
 bool ack_flood(     char *srcIP,
                     char *dstIP,
                     u_int16_t dstPort,
