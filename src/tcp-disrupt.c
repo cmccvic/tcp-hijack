@@ -156,7 +156,7 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
                 sequenceNumber + seq_inc,
                 ackNumber + ack_inc,
                 RESET_FLAG,
-                "",
+                "\0",
                 packet,
                 sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);
 
