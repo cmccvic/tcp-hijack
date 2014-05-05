@@ -103,8 +103,9 @@ void fill_packet(   char *srcIP,
     tcpHdr->window = htons(43690);
     tcpHdr->urg_ptr = 0;
 
-    printf("seq: %u\n", tcpHdr->seq);
-    printf("ack_seq: %u\n", tcpHdr->ack_seq);
+    printf("\n");
+    printf("[fill_packet]: seq: %u\n", tcpHdr->seq);
+    printf("[fill_packet]: ack_seq: %u\n", tcpHdr->ack_seq);
 
     //calculate the checksum for the TCP header
     pTCPPacket.srcAddr = inet_addr(srcIP);
@@ -149,6 +150,8 @@ void fill_packet(   char *srcIP,
             printf("\n------------------DATA-----------------");
         }
     }
+    printf("\n");
+    printf("\n");
 }
 
 unsigned short csum(unsigned short *ptr,int nbytes) {

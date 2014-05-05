@@ -1,6 +1,6 @@
 CC = gcc
 INCLUDES = -I../include
-CFLAGS = -Wall -Werror $(INCLUDES)
+CFLAGS = -g -Wall -Werror $(INCLUDES)
 LIBS = -lpcap
 BIN = tcp-disrupt
 DIST = ../dist
