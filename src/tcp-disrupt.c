@@ -147,14 +147,14 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     addr_in.sin_port = htons(destinationPort);
     addr_in.sin_addr.s_addr = inet_addr(destinationIP);
 
-    fill_packet(sourceIP,
-                destinationIP,
-                destinationPort,
+    fill_packet(destinationIP,
+                sourceIP,
                 sourcePort,
+                destinationPort,
                 0,
                 1,
-                sequenceNumber + seq_inc,
                 ackNumber + ack_inc,
+                sequenceNumber + seq_inc,
                 1,
                 "\0",
                 packet,
