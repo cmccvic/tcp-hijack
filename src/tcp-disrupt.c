@@ -155,7 +155,7 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
                 1,
                 sequenceNumber + seq_inc,
                 ackNumber + ack_inc,
-                1,
+                RESET_FLAG,
                 '\0',
                 packet,
                 65536);
