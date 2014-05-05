@@ -22,7 +22,8 @@
 #include "packet-send.h"
 #include "packet-sniff.h"
 
-#define RESET_FLAG 1
+#define RESET_ON 1
+#define RESET_OFF 0
 
 /* Displays the usage string for this program */
 void display_usage(char *name);
