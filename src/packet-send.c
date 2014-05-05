@@ -66,6 +66,7 @@ void fill_packet(   char *srcIP,
     struct tcphdr *tcpHdr;
     char *pseudo_packet;
     struct pseudoTCPPacket pTCPPacket;
+
     int data_length = strlen(data);
 
     memset(packet, 0 ,packet_size);
@@ -95,7 +96,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->doff = 5;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
-    tcpHdr->rst = htons(rst);
+    tcpHdr->rst = rst;
     tcpHdr->psh = 0;
     tcpHdr->ack = ack;                  //if you are acknowledging a sec number
     tcpHdr->urg = 0;
