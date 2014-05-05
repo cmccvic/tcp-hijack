@@ -15,8 +15,8 @@
 
 
 /* Default values to use if either host's details are not provided. */
-#define DEFAULT_CLIENT_IP   "192.168.1.106"
-#define DEFAULT_SERVER_IP   "192.168.1.113"
+#define DEFAULT_CLIENT_IP   "192.168.1.104"
+#define DEFAULT_SERVER_IP   "192.168.1.112"
 #define DEFAULT_SERVER_PORT "23"
 
 
@@ -45,6 +45,9 @@
 
 /* Struct pcap_loop will use to pass arguments to our packet processing function. */
 typedef struct spdcxSniffArgs{
+	char *clientIP;
+	char *serverIP;
+	int serverPort;
     int packetCount;
     int dataLinkOffset;
 } spdcxSniffArgs;
