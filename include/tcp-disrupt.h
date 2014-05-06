@@ -22,7 +22,12 @@
 #include "packet-send.h"
 #include "packet-sniff.h"
 
+#define ACK_ON 1
+#define SYN_ON 1
 #define RESET_ON 1
+
+#define ACK_OFF 0
+#define SYN_OFF 0
 #define RESET_OFF 0
 
 /* Displays the usage string for this program */
