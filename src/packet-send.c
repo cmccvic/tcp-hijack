@@ -79,7 +79,7 @@ void fill_packet(   char *srcIP,
     ipHdr->ihl = 5;
     ipHdr->version = 4;
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
+    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
