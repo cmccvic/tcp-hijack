@@ -22,6 +22,11 @@
 #include "packet-send.h"
 #include "packet-sniff.h"
 
+/* Default values to use if either host's details are not provided. */
+#define DEFAULT_CLIENT_IP   "192.168.1.104"
+#define DEFAULT_SERVER_IP   "192.168.1.112"
+#define DEFAULT_SERVER_PORT 23
+
 #define ACK_ON 1
 #define SYN_ON 1
 #define PSH_ON 1
