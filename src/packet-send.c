@@ -124,44 +124,33 @@ void fill_packet(   char *srcIP,
     pTCPPacket.zero = 0;
     pTCPPacket.protocol = IPPROTO_TCP;
     pTCPPacket.TCP_len = htons(sizeof(struct tcphdr) + data_length);
-
     pseudo_packet = (char *) malloc((int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + data_length));
     memset(pseudo_packet, 0, sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) + data_length);
-
     memcpy(pseudo_packet, (char *) &pTCPPacket, sizeof(struct pseudoTCPPacket));
     memcpy(pseudo_packet + sizeof(struct pseudoTCPPacket), tcpHdr, sizeof(struct tcphdr) + data_length);
-
-    tcpHdr->check = (csum((unsigned short *) pseudo_packet, (int) (sizeof(struct pseudoTCPPacket) + 
-          sizeof(struct tcphdr) +  data_length)));
-
+    tcpHdr->check = (csum((unsigned short *) pseudo_packet, (int) (sizeof(struct pseudoTCPPacket) + sizeof(struct tcphdr) +  data_length)));
     free(pseudo_packet);
-
     printf("\n");
 }
 
 
-unsigned short csum(unsigned short *ptr,int nbytes) {
-    long sum;
-    unsigned short oddbyte;
-    short answer;
-
-    sum=0;
-    while(nbytes>1) {
-        sum+=*ptr++;
-        nbytes-=2;
+unsigned short csum(unsigned short *ptr, int nbytes) {
+    long sum = 0;
+    unsigned short oddbyte = 0;
+    while (nbytes>1){
+        sum += *ptr++;
+        nbytes -= 2;
     }
-    if(nbytes==1) {
-        oddbyte=0;
-        *((u_char*)&oddbyte)=*(u_char*)ptr;
-        sum+=oddbyte;
+    if (nbytes == 1){
+        oddbyte = 0;
+        *((u_char*)&oddbyte) = *(u_char*)ptr;
+        sum += oddbyte;
     }
-
-    sum = (sum>>16)+(sum & 0xffff);
+    sum = (sum>>16) + (sum & 0xffff);
     sum = sum + (sum>>16);
-    answer=(short)~sum;
-
-    return(answer);
+    return (short)(~sum);
 }
+
 
 char* gen_packet(   char *srcIP,
                     char *dstIP,
@@ -174,7 +163,6 @@ char* gen_packet(   char *srcIP,
                     u_int32_t ack_seq,
                     const char * data,
                     uint32_t packet_size) {
-
 
         char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data));
         fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, psh, seq, ack_seq, 0, data, packet, packet_size);
