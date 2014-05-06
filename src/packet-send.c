@@ -79,11 +79,15 @@ void fill_packet(   char *srcIP,
     tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
     memcpy((char *)(packet + sizeof(struct iphdr) + sizeof(struct tcphdr)), data, data_length);
 
+
+
+    u_int16_t ipHeaderLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
+
     //IP header
     ipHdr->ihl = 5;
-    ipHdr->version = 4;
+    ipHdr->version = 4;                 // IPv4
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
+    ipHdr->tot_len = ipHeaderLength;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
