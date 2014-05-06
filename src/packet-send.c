@@ -43,12 +43,15 @@ bool seq_flood(     char *srcIP,
 
 
 int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
-    int bytes;
     struct iphdr *ipHdr = (struct iphdr *) packet;
-
-    bytes = sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in));
-    return bytes;
+    return sendto(socket_fd, ipHdr, ipHdr->tot_len, 0, (struct sockaddr *) &addr_in, sizeof(addr_in));
 }
+
+
+
+
+
+
 
 void fill_packet(   char *srcIP,
                     char *dstIP,
