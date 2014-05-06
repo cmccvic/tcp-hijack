@@ -41,6 +41,7 @@ bool seq_flood(     char *srcIP,
     return b;
 }
 
+
 int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in) {
     int bytes;
     struct iphdr *ipHdr = (struct iphdr *) packet;
@@ -105,8 +106,8 @@ void fill_packet(   char *srcIP,
     tcpHdr->urg_ptr = 0;
 
     printf("\n");
-    printf("[fill_packet]: seq: %u\n", tcpHdr->seq);
-    printf("[fill_packet]: ack_seq: %u\n", tcpHdr->ack_seq);
+    printf("[fill_packet]: Sending Sequence Number: %u\n", tcpHdr->seq);
+    printf("[fill_packet]: Acknowledging: %u\n", tcpHdr->ack_seq);
 
     //calculate the checksum for the TCP header
     pTCPPacket.srcAddr = inet_addr(srcIP);
@@ -126,8 +127,9 @@ void fill_packet(   char *srcIP,
 
     free(pseudo_packet);
 
-    int i;
     printf("\n");
+/*
+    int i;
     for (i = 0; i < packet_size; ++i) {
 
         if((i % 4) == 0) {
@@ -153,8 +155,8 @@ void fill_packet(   char *srcIP,
     }
     printf("\n");
     printf("\n");
+*/
 }
-
 unsigned short csum(unsigned short *ptr,int nbytes) {
     long sum;
     unsigned short oddbyte;

