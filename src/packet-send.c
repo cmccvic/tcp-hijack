@@ -95,10 +95,10 @@ void fill_packet(   char *srcIP,
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
     tcpHdr->doff = 0x8;
-    tcpHdr->fin = 1;
+    tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
-    tcpHdr->psh = 0;
+    tcpHdr->psh = 1;
     tcpHdr->ack = ack;                  //if you are acknowledging a sec number
     tcpHdr->ack = 1;
     tcpHdr->urg = 0;
