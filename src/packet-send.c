@@ -79,7 +79,7 @@ void fill_packet(   char *srcIP,
     ipHdr->ihl = 5;
     ipHdr->version = 4;
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
+    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
@@ -94,12 +94,13 @@ void fill_packet(   char *srcIP,
     tcpHdr->seq = htonl(seq);           //sequence number
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
-    tcpHdr->doff = 5;
-    tcpHdr->fin = 0;
+    tcpHdr->doff = 0x8;
+    tcpHdr->fin = 1;
     tcpHdr->syn = syn;
-    tcpHdr->rst = rst;
+    tcpHdr->rst = 0;
     tcpHdr->psh = 0;
     tcpHdr->ack = ack;                  //if you are acknowledging a sec number
+    tcpHdr->ack = 1;
     tcpHdr->urg = 0;
     tcpHdr->res2 = 0;
     tcpHdr->window = htons(43690);
