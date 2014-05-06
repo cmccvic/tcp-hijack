@@ -9,29 +9,30 @@ static const struct option  longOpts[]  = {
     {   NULL,         no_argument,        NULL,   0     }
 };
 
-static const char *optString = "p:c:s:i:h?";
 
 int main(int argc, char **argv) {
     int     opt         = 0;
     int     longIndex   = 0;
-    char    *clientIP   = NULL;
-    char    *serverIP   = NULL;
-    char    *interface  = NULL;
-    char    *serverPort = NULL;
+
+    sniffArgs *sniffArgs;
+    if( !(sniffArgs = malloc(sizeof(sniffArgs))) ){
+        fprintf(stderr, "[FAIL] Failed to allocate memory. Quitting.\n");
+        exit(-1);
+    } else memset(sniffArgs, 0, sizeof(struct sniffArgs));
 
     while((opt = getopt_long(argc, argv, optString, longOpts, &longIndex)) != -1) {
         switch( opt ) {
             case 'c':
-                clientIP = optarg; 
+                sniffArgs->clientIP = optarg; 
                 break;
             case 's':
-                serverIP = optarg;
+                sniffArgs->serverIP = optarg; 
                 break;
             case 'i':
-                interface = optarg;
+                sniffArgs->interface = optarg;
                 break;
             case 'p':
-                serverPort = optarg;
+                sniffArgs->serverPort = atoi(optarg); 
                 break;     
             case 'h':   /* h or --help */
             case '?':
@@ -39,37 +40,18 @@ int main(int argc, char **argv) {
                 exit(EXIT_SUCCESS);
                 break;     
             default:
-                /* Shouldn't get here */
                 break;
         }
     }
 
-/* For now, these will not need to be mandatory: 
-    if(clientIP == NULL) {
-        fprintf(stderr, "Client IP address was not provided.\n");
-        display_usage(argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    if(serverIP == NULL) {
-        fprintf(stderr, "Server IP address was not provided.\n");
-        display_usage(argv[0]);
-        return EXIT_FAILURE;
-    }
-    // TODO: Remove this
-    if(interface != NULL) {
-        printf("Interface %s\n", interface);
-    }
-*/
-
-    int result = tcpDisrupt(clientIP, serverIP, serverPort, interface);
-    if (result){
-        fprintf(stderr, "[FAIL] Failed to sniff the network. Quitting.\n");
+    int snifferResult;
+    if ( (snifferResult = sniffNetwork(sniffArgs)) ){
+        fprintf(stderr, "[FAIL] Failed to sniff the network. Result Code: [ %d ]. Quitting.\n", snifferResult);
         exit(result);
-    }
- 
+    } 
     return 0;
 }
+
 
 /**
  * Prints out the usage string of this program.
