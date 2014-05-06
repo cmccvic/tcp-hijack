@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     int snifferResult;
     if ( (snifferResult = sniffNetwork(sniffArgs)) ){
         fprintf(stderr, "[FAIL] Failed to sniff the network. Result Code: [ %d ]. Quitting.\n", snifferResult);
-        exit(result);
+        exit(1);
     } 
     return 0;
 }
