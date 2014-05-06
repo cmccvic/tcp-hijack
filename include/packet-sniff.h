@@ -14,10 +14,7 @@
 #include <unistd.h>
 
 
-/* Default values to use if either host's details are not provided. */
-#define DEFAULT_CLIENT_IP   "192.168.1.104"
-#define DEFAULT_SERVER_IP   "192.168.1.112"
-#define DEFAULT_SERVER_PORT "23"
+typedef int (*packetHandlerFunction)(void *packet, int packetNumber);
 
 
 /* Standard header sizes for different transport layer protocols. */
