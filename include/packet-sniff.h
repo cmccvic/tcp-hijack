@@ -47,18 +47,18 @@ typedef struct dnsHeader{
 } dnsHeader;
 
 
-/* Called by pcap_loop. Parse and process incoming packets. */
-void processPacket(u_char *arg, const struct pcap_pkthdr *pkthdr, const u_char *packet);
-
-
-/* Using the network interface provided, disrupt the  TCP session between the client
+/* Using the network interface provided, sniff network between the client
  * and server. Providing a NULL to the network interface argument will allow the
  * pcap library to automatically select a device on the computer.
  *
  * Returns: 0 on Success
  *          1 on Failure
  */
-int tcpDisrupt(char *clientIP, char *serverIP, char *serverPort, char *networkInterface);
+int sniffNetwork(sniffArgs *sniffArgs);
+
+
+/* Called by pcap_loop. Parse and process incoming packets. */
+void processPacket(u_char *arg, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
 
 #endif
