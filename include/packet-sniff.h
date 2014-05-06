@@ -16,38 +16,24 @@
 
 typedef int (*packetHandlerFunction)(void *packet, int packetNumber);
 
-
-/* Standard header sizes for different transport layer protocols. */
-#define UDP_HEADER_SIZE 8
-#define TCP_HEADER_SIZE 20
-
-
-/* DNS Header bit flags as defined in RFC1035. */
-#define DNS_HEADER_QR_QUERY                 0x0000
-#define DNS_HEADER_QR_RESPONSE              0x8000
-#define DNS_HEADER_OPCODE_QUERY             0x0000
-#define DNS_HEADER_OPCODE_STATUS            0x1000
-#define DNS_HEADER_OPCODE_IQUERY            0x0800
-#define DNS_HEADER_FLAG_AA                  0x0400
-#define DNS_HEADER_FLAG_TC                  0x0200
-#define DNS_HEADER_FLAG_RD                  0x0100
-#define DNS_HEADER_FLAG_RA                  0x0080
-#define DNS_HEADER_RCODE_NO_ERROR           0x0000
-#define DNS_HEADER_RCODE_FORMAT_ERROR       0x0001
-#define DNS_HEADER_RCODE_SERVER_FAILURE     0x0002
-#define DNS_HEADER_RCODE_NAME_RROR          0x0003
-#define DNS_HEADER_RCODE_NOT_IMPLEMENTED    0x0004
-#define DNS_HEADER_RCODE_REFUSED            0x0005
+typedef struct sniffArgs{
+    packetHandlerFunction packetHandlerFunction;
+    char *clientIP;
+    char *serverIP;
+    int   serverPort;
+    char *interface;
+    char *filterString;
+} sniffArgs;
 
 
 /* Struct pcap_loop will use to pass arguments to our packet processing function. */
-typedef struct spdcxSniffArgs{
+typedef struct processPacketArgs{
 	char *clientIP;
 	char *serverIP;
-	int serverPort;
-    int packetCount;
-    int dataLinkOffset;
-} spdcxSniffArgs;
+    int   serverPort;
+    int   packetCount;
+    int   dataLinkOffset;
+} processPacketArgs;
 
 
 /* DNS header as defined in RFC1035 */
