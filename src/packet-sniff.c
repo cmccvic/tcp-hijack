@@ -118,6 +118,7 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     struct ip       *ipHeader;
     struct tcphdr   *tcpHeader;
     spdcxSniffArgs  *sniffArgs = (spdcxSniffArgs *)arg;;
+    sniffArgs->packetCount++;
 
     /* Navigate past the Data Link layer to the Network layer: */
     packet += sniffArgs->dataLinkOffset;
@@ -139,7 +140,7 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
             break;
     }
 
-    /* TODO: Figure out what the first twelve bits of telnet are*/
+    /* Skip the options in the tcp header: */
     packet += 12;
     dataLength -= 12;
 
@@ -159,7 +160,10 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
                     printf("[processPocket]: sequence Number: %u\n", (uint32_t)seqNum);
                     printf("[processPocket]: ack Number: %u\n", (uint32_t)ackNum);                    
                     printf("[processPocket]: Disrupting.....\n");
-                    disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum, 0);
+                    if(sniffArgs->packetCount < 100)
+                        disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum, 0, 0);
+                    else
+                        disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum, 0, 1);
                 }
             }
         }

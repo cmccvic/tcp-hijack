@@ -129,35 +129,9 @@ void fill_packet(   char *srcIP,
     free(pseudo_packet);
 
     printf("\n");
-/*
-    int i;
-    for (i = 0; i < packet_size; ++i) {
-
-        if((i % 4) == 0) {
-            printf("\n");
-        }
-
-        printf("%d", (0x01 & *(packet + i) >> 7));
-        printf("%d", (0x01 & *(packet + i) >> 6));
-        printf("%d", (0x01 & *(packet + i) >> 5));
-        printf("%d", (0x01 & *(packet + i) >> 4));
-        printf(" ");
-        printf("%d", (0x01 & *(packet + i) >> 3));
-        printf("%d", (0x01 & *(packet + i) >> 2));
-        printf("%d", (0x01 & *(packet + i) >> 1));
-        printf("%d", (0x01 & *(packet + i) >> 0));
-        printf(" ");
-
-        if(i == 19) {
-            printf("\n------------------TCP------------------");
-        } else if(i == (20+19)) {
-            printf("\n------------------DATA-----------------");
-        }
-    }
-    printf("\n");
-    printf("\n");
-*/
 }
+
+
 unsigned short csum(unsigned short *ptr,int nbytes) {
     long sum;
     unsigned short oddbyte;
