@@ -150,43 +150,18 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
         uint16_t sourcePort = ntohs(tcpHeader->source);
         uint16_t destPort = ntohs(tcpHeader->dest);
 
-/*
-        printf("---------------------------------\n");
-        printf("Src:%s\n", srcIP);
-        printf("Src-Port: %d\n", sourcePort);
-        printf("Dst:%s\n", dstIP); 
-        printf("Dst-Port: %d\n", destPort);
-        printf("ACK:%zu\n", (size_t)ackNum);  
-        printf("Seq:%zu\n", (size_t)seqNum);   
-        printf("Data:\n");
-        printf("---------------------------------\n");
-*/
-
-
         if ( !(strcmp(sniffArgs->clientIP, srcIP)) ) {
-            printf("Matching client IP found: %s\n", srcIP);
+            printf("[processPocket]: Matching client IP found: %s\n", srcIP);
             if ( !(strcmp(sniffArgs->serverIP, dstIP)) ) {
-                printf("Matching server IP found: %s\n", dstIP);
+                printf("[processPocket]: Matching server IP found: %s\n", dstIP);
                 if ( sniffArgs->serverPort == destPort ){
-                    printf("Matching server port found: %d\n", destPort);
-                    printf("Disrupting.....\n");
+                    printf("[processPocket]: Matching server port found: %d\n", destPort);
+                    printf("[processPocket]: sequence Number: %u\n", (uint32_t)seqNum);
+                    printf("[processPocket]: ack Number: %u\n", (uint32_t)ackNum);                    
+                    printf("[processPocket]: Disrupting.....\n");
                     disrupt_session(srcIP, sourcePort, dstIP, destPort, seqNum, ackNum);
                 }
             }
         }
-
-/*
-        int k=0;
-        while( (dataLength>0) && (k<dataLength) ){
-            if (isprint(packet[k]))
-                printf("%c", packet[k]);
-            else if (packet[k] == '\n')
-                printf("\n");
-            k++;
-        }
-        printf("\n");        
-        printf("---------------------------------\n");
-        printf("\n\n");        
-    */
     }
 }
