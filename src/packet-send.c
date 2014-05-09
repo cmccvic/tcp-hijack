@@ -81,13 +81,13 @@ void fill_packet(   char *srcIP,
 
 
 
-    u_int16_t ipHeaderLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
+    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
 
     //IP header
     ipHdr->ihl = 5;
     ipHdr->version = 4;                 // IPv4
     ipHdr->tos = 0;
-    ipHdr->tot_len = ipHeaderLength;
+    ipHdr->tot_len = ipHeaderTotalLength;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
