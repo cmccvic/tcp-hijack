@@ -81,7 +81,7 @@ void fill_packet(   char *srcIP,
 
 
 
-    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 12;
+    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
 
     //IP header
     ipHdr->ihl = 5;
