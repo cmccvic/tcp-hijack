@@ -37,6 +37,7 @@ bool seq_flood(     char *srcIP,
 
 
 int send_packet(int socket_fd, char *packet, struct sockaddr_in addr_in);
+void print_packet_bits(char *packet, int packet_size);
 
 //Calculate the TCP header checksum of a string (as specified in rfc793)
 //Function from http://www.binarytides.com/raw-sockets-c-code-on-linux/
