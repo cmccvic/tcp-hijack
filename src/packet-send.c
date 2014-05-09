@@ -129,10 +129,11 @@ void fill_packet(   char *srcIP,
     free(pseudo_packet);
 
     printf("\n");
+    print_packet_bits(packet, packet_size);
 }
 
 void print_packet_bits(char *packet, int packet_size) {
-    
+
     int i;
     printf("\n");
     for (i = 0; i < packet_size; ++i) {
@@ -158,6 +159,43 @@ void print_packet_bits(char *packet, int packet_size) {
             printf("\n------------------DATA-----------------");
         }
     }
+}
+
+void print_packet_ascii(char *packet, int packet_size) {
+    struct iphdr  *ipHdr  = packet;
+    struct tcphdr *tcpHdr = sizeof(struct iphdr);
+
+    //IP header
+    printf("ipHdr->ihl      = %d\n"ipHdr->ihl);
+    printf("ipHdr->version  = %d\n"ipHdr->version);
+    printf("ipHdr->tos      = %d\n"ipHdr->tos);
+    printf("ipHdr->tot_len  = %d\n"ipHdr->tot_len);
+    printf("ipHdr->id       = %d\n"ipHdr->id);
+    printf("ipHdr->frag_off = %d\n"ipHdr->frag_off);
+    printf("ipHdr->ttl      = %d\n"ipHdr->ttl);
+    printf("ipHdr->protocol = %d\n"ipHdr->protocol);
+    printf("ipHdr->saddr    = %d\n"ipHdr->saddr);
+    printf("ipHdr->daddr    = %d\n"ipHdr->daddr);
+    printf("ipHdr->check    = %d\n"ipHdr->check);
+
+    //TCP header
+    printf("tcpHdr->source  = %d\n", ntohs(tcpHdr->source));
+    printf("tcpHdr->dest    = %d\n", ntohs(tcpHdr->dest));
+    printf("tcpHdr->seq     = %d\n", ntohl(tcpHdr->seq));
+    printf("tcpHdr->ack_seq = %d\n", ntohl(tcpHdr->ack_seq));
+    printf("tcpHdr->res1    = %d\n", tcpHdr->res1);
+    printf("tcpHdr->doff    = %d\n", tcpHdr->doff);
+    printf("tcpHdr->fin     = %d\n", tcpHdr->fin);
+    printf("tcpHdr->syn     = %d\n", tcpHdr->syn);
+    printf("tcpHdr->rst     = %d\n", tcpHdr->rst);
+    printf("tcpHdr->psh     = %d\n", tcpHdr->psh);
+    printf("tcpHdr->ack     = %d\n", tcpHdr->ack);
+    printf("tcpHdr->ack     = %d\n", tcpHdr->ack);
+    printf("tcpHdr->urg     = %d\n", tcpHdr->urg);
+    printf("tcpHdr->res2    = %d\n", tcpHdr->res2);
+    printf("tcpHdr->window  = %d\n", ntohs(tcpHdr->window));
+    printf("tcpHdr->urg_ptr = %d\n", tcpHdr->urg_ptr);
+
 }
 
 
