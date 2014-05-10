@@ -67,9 +67,6 @@ void fill_packet(   char *srcIP,
                     char *packet,
                     uint32_t packet_size) {
 
-    printf("got ipHdr->saddr = %s\n", srcIP);
-    printf("got ipHdr->daddr = %s\n", dstIP);
-
     struct iphdr *ipHdr;
     struct tcphdr *tcpHdr;
     char *pseudo_packet;
@@ -84,18 +81,14 @@ void fill_packet(   char *srcIP,
 
     u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + data_length;
 
-    printf("ipHdr->saddr = %s\n", srcIP);
-    printf("ipHdr->daddr = %s\n", dstIP);
-
-
     //IP header
     ipHdr->ihl = 5;
     ipHdr->version = 4;                 // IPv4
-    ipHdr->tos = 0;
+    ipHdr->tos = 0x10;
     ipHdr->tot_len = ipHeaderTotalLength;
-    ipHdr->id = htons(54321);
-    ipHdr->frag_off = 0;
-    ipHdr->ttl = 0xFF;
+    ipHdr->id = htons(0xa89e);
+    ipHdr->frag_off = htons(0x4000);
+    ipHdr->ttl = 0x40;
     ipHdr->protocol = IPPROTO_TCP;
     ipHdr->saddr = inet_addr(srcIP);
     ipHdr->daddr = inet_addr(dstIP);
@@ -129,11 +122,6 @@ void fill_packet(   char *srcIP,
 
     char *dataPtr = (char *)optionsPtr;
     *dataPtr = *data;
-
-
-    printf("\n");
-    printf("[fill_packet]: Sending Sequence Number: %u\n", tcpHdr->seq);
-    printf("[fill_packet]: Acknowledging: %u\n", tcpHdr->ack_seq);
 
     //calculate the checksum for the TCP header
     pTCPPacket.srcAddr = inet_addr(srcIP);

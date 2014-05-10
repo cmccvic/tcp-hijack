@@ -105,7 +105,7 @@ void disrupt_session(void *sniffedPacket) {
         exit(-1);
     }
 
-    printf("\n\nReceived {");
+    printf("\nReceived {");
     printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_src));
     printf("\"dstIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
     printf("\"dstPort\":%u, ",      ntohs(tcpHeader->dest));
@@ -116,7 +116,7 @@ void disrupt_session(void *sniffedPacket) {
     printf("\"RST\":%d, ",          tcpHeader->rst);
     printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->ack_seq));
     printf("\"SYN_NUM\":%u",        ntohl(tcpHeader->seq));
-    printf("}\n\n");
+    printf("}\n");
 
     printf("Sending {");
     printf("\"srcIP\":\"%s\", ",    inet_ntoa(ipHeader->ip_dst));
@@ -142,9 +142,6 @@ void disrupt_session(void *sniffedPacket) {
         char *srcTemp = inet_ntoa(ipHeader->ip_src);
         char *srcAddress = malloc(strlen(srcTemp) + 1);
         strncpy(srcAddress, srcTemp, strlen(srcTemp) + 1);
-
-        printf("filling with ipHdr->saddr = %s\n", dstAddress);
-        printf("filling with ipHdr->daddr = %s\n", srcAddress);
 
         fill_packet(dstAddress,                             // Source IP Address
                     srcAddress,                             // Destination IP Address
