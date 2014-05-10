@@ -79,7 +79,7 @@ void fill_packet(   char *srcIP,
     ipHdr->ihl = 5;
     ipHdr->version = 4;
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
+    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 3;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
@@ -94,7 +94,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->seq = htonl(seq);           //sequence number
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
-    tcpHdr->doff = 0x8;
+    tcpHdr->doff = 0x6;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
@@ -103,8 +103,15 @@ void fill_packet(   char *srcIP,
     tcpHdr->ack = 1;
     tcpHdr->urg = 0;
     tcpHdr->res2 = 0;
-    tcpHdr->window = htons(43690);
+    tcpHdr->window = htons(229);
     tcpHdr->urg_ptr = 0;
+
+    char *ptr = (char*)(tcpHdr + 1);
+    *ptr = 0x01;
+    ptr++;
+    *ptr = 0x01;
+    ptr++;
+    *ptr = 0x01;
 
     printf("\n");
     printf("[fill_packet]: Sending Sequence Number: %u\n", tcpHdr->seq);
@@ -129,7 +136,7 @@ void fill_packet(   char *srcIP,
     free(pseudo_packet);
 
     printf("\n");
-    print_packet_bits(packet, packet_size);
+    //print_packet_bits(packet, packet_size);
 }
 
 void print_packet_bits(char *packet, int packet_size) {
@@ -162,6 +169,7 @@ void print_packet_bits(char *packet, int packet_size) {
 }
 
 void print_packet_ascii(char *packet, int packet_size) {
+    /*
     struct iphdr  *ipHdr  = packet;
     struct tcphdr *tcpHdr = sizeof(struct iphdr);
 
@@ -195,6 +203,7 @@ void print_packet_ascii(char *packet, int packet_size) {
     printf("tcpHdr->res2    = %d\n", tcpHdr->res2);
     printf("tcpHdr->window  = %d\n", ntohs(tcpHdr->window));
     printf("tcpHdr->urg_ptr = %d\n", tcpHdr->urg_ptr);
+    */
 
 }
 
