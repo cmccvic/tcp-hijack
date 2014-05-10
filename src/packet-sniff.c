@@ -104,7 +104,7 @@ int sniffNetwork(sniffArgs *sniffArgs){
     } else printf("[INFO] Packet Filter: %s\n", packetFilterString);
 
     /* Start the loop: */
-    pcap_loop(packetDescriptor, -1, processPacket, (u_char *)processPacketArgs);
+    pcap_loop(packetDescriptor, 2, processPacket, (u_char *)processPacketArgs);
     free(processPacketArgs);
     return 0;
 }

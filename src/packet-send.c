@@ -79,7 +79,8 @@ void fill_packet(   char *srcIP,
     tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
     memcpy((char *)(packet + sizeof(struct iphdr) + sizeof(struct tcphdr)), data, data_length);
 
-    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + data_length;
+//    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + data_length;
+    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
 
     //IP header
     ipHdr->ihl = 5;
@@ -100,7 +101,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->seq = htonl(seq);           //sequence number
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
-    tcpHdr->doff = 0x8;
+    tcpHdr->doff = 0x5;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
@@ -111,7 +112,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->res2 = 0;
     tcpHdr->window = htons(229);
     tcpHdr->urg_ptr = 0;
-
+/*
     int *optionsPtr = (int *)(tcpHdr + 1);
     *optionsPtr = 0x0a080101;
     optionsPtr++;
@@ -121,6 +122,10 @@ void fill_packet(   char *srcIP,
     optionsPtr++;
 
     char *dataPtr = (char *)optionsPtr;
+    *dataPtr = *data;
+*/
+
+    char *dataPtr = (char *)(tcpHdr + 1);
     *dataPtr = *data;
 
     //calculate the checksum for the TCP header
