@@ -79,7 +79,7 @@ void fill_packet(   char *srcIP,
     ipHdr->ihl = 5;
     ipHdr->version = 4;
     ipHdr->tos = 0;
-    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length + 3;
+    ipHdr->tot_len = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
     ipHdr->id = htons(54321);
     ipHdr->frag_off = 0;
     ipHdr->ttl = 0xFF;
@@ -94,7 +94,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->seq = htonl(seq);           //sequence number
     tcpHdr->ack_seq = htonl(ack_seq);   //ack sequence number, depends whether ACK is set or not
     tcpHdr->res1 = 0;
-    tcpHdr->doff = 0x6;
+    tcpHdr->doff = 0x5;
     tcpHdr->fin = 0;
     tcpHdr->syn = syn;
     tcpHdr->rst = 0;
@@ -107,15 +107,11 @@ void fill_packet(   char *srcIP,
     tcpHdr->urg_ptr = 0;
 
     char *ptr = (char*)(tcpHdr + 1);
-    *ptr = 0x01;
-    ptr++;
-    *ptr = 0x01;
-    ptr++;
-    *ptr = 0x01;
+    strncpy(ptr, data, data_length);
 
     printf("\n");
-    printf("[fill_packet]: Sending Sequence Number: %u\n", tcpHdr->seq);
-    printf("[fill_packet]: Acknowledging: %u\n", tcpHdr->ack_seq);
+    printf("[fill_packet]: Sending Sequence Number: %u\n", seq);
+    printf("[fill_packet]: Acknowledging: %u\n", ack_seq);
 
     //calculate the checksum for the TCP header
     pTCPPacket.srcAddr = inet_addr(srcIP);

@@ -146,9 +146,9 @@ while(z--) {
                 sourcePort,                                                   //dstPort
                 destinationPort,                                              //srcPort
                 SYN_OFF,                                                      //syn
-                ACK_OFF,                                                      //ack
+                ACK_ON,                                                      //ack
                 ackNumber,                                                    //seq
-                sequenceNumber,                                               //ack_seq
+                sequenceNumber + 1,                                               //ack_seq
                 RESET_OFF,                                                    //rst
                 "Q",                                                          //data
                 packet,                                                       //packet
@@ -159,6 +159,23 @@ while(z--) {
     send_packet(sock, packet, addr_in);
 
     getchar();
+
+    fill_packet(destinationIP,                                                //srcIP
+                sourceIP,                                                     //dstIP
+                sourcePort,                                                   //dstPort
+                destinationPort,                                              //srcPort
+                SYN_OFF,                                                      //syn
+                ACK_ON,                                                      //ack
+                ackNumber+1,                                                    //seq
+                sequenceNumber+2,                                               //ack_seq
+                RESET_OFF,                                                    //rst
+                "",                                                          //data
+                packet,                                                       //packet
+                sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
+
+    tcpHdr->psh = 0;
+    // Send out the packet
+    send_packet(sock, packet, addr_in);
 }
 
     if(finalRound){
