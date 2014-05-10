@@ -81,7 +81,7 @@ void fill_packet(   char *srcIP,
 
 
 
-    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + data_length;
+    u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + data_length;
 
     //IP header
     ipHdr->ihl = 5;
@@ -113,6 +113,18 @@ void fill_packet(   char *srcIP,
     tcpHdr->res2 = 0;
     tcpHdr->window = htons(43690);
     tcpHdr->urg_ptr = 0;
+
+    int *optionsPtr = (int *)(tcpHdr + 1);
+    *optionsPtr = 0x0a080101;
+    optionsPtr++;
+    *optionsPtr = 0xFFFFFFFF;
+    optionsPtr++;
+    *optionsPtr = 0xFFFFFFFF;
+    optionsPtr++;
+
+    char *dataPtr = (char *)optionsPtr;
+    *dataPtr = *data;
+
 
     printf("\n");
     printf("[fill_packet]: Sending Sequence Number: %u\n", tcpHdr->seq);

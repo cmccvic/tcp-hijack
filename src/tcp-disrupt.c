@@ -87,7 +87,7 @@ void disrupt_session(void *sniffedPacket) {
     addr_in.sin_port            = tcpHeader->source;
     inet_pton(AF_INET, inet_ntoa(ipHeader->ip_src), &(addr_in.sin_addr));
 
-    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 2;
+    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + 1;
     void *packet                = malloc(sizeOfPacket);
     uint32_t ack_inc            = 1;       // Amount to increase ack by
     uint32_t seq_inc            = 1;       // Amount to increase seq by
