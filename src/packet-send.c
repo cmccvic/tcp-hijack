@@ -67,6 +67,9 @@ void fill_packet(   char *srcIP,
                     char *packet,
                     uint32_t packet_size) {
 
+    printf("got ipHdr->saddr = %s\n", srcIP);
+    printf("got ipHdr->daddr = %s\n", dstIP);
+
     struct iphdr *ipHdr;
     struct tcphdr *tcpHdr;
     char *pseudo_packet;
@@ -79,9 +82,11 @@ void fill_packet(   char *srcIP,
     tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
     memcpy((char *)(packet + sizeof(struct iphdr) + sizeof(struct tcphdr)), data, data_length);
 
-
-
     u_int16_t ipHeaderTotalLength = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + data_length;
+
+    printf("ipHdr->saddr = %s\n", srcIP);
+    printf("ipHdr->daddr = %s\n", dstIP);
+
 
     //IP header
     ipHdr->ihl = 5;
@@ -111,7 +116,7 @@ void fill_packet(   char *srcIP,
     tcpHdr->ack = 1;
     tcpHdr->urg = 0;
     tcpHdr->res2 = 0;
-    tcpHdr->window = htons(43690);
+    tcpHdr->window = htons(229);
     tcpHdr->urg_ptr = 0;
 
     int *optionsPtr = (int *)(tcpHdr + 1);
